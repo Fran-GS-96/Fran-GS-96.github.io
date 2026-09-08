@@ -189,7 +189,7 @@ figure {
 	position: fixed;
 	overflow-y: scroll;
 	z-index: 1001;
-	background: $brand-primary;
+	background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 10px), $brand-primary;
 	color: $brand-white;
 	@include transition(.5s);
 
@@ -260,7 +260,7 @@ figure {
 						bottom: 7px;
 						left: 0;
 						right: 0;
-						background-color: $brand-color-2;
+						background-color: $brand-color-4;
 						visibility: hidden;
 						-webkit-transform: scaleX(0);
 						-moz-transform: scaleX(0);
@@ -289,7 +289,7 @@ figure {
 				}
 				&.active {
 					a {
-						color: $brand-color-2;
+						color: $brand-color-4;
 						&:after {
 							visibility: visible;
 							-webkit-transform: scaleX(1);
@@ -361,6 +361,9 @@ figure {
 	float: left;
 	margin-bottom: 10em;
 	clear: both;
+	.overlay {
+		background: rgba(29, 53, 87, .55);
+	}
 	.flexslider {
 		border: none;
 		z-index: 1;
@@ -495,7 +498,7 @@ body {
 		#colorlib-aside {
 			@include translateX(0);
 			width: 300px;
-			background: $brand-primary;
+			background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 10px), $brand-primary;
 			z-index: 999;
 			position: fixed;
 		}

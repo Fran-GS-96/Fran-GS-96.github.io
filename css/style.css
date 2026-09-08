@@ -95,7 +95,7 @@ figure figcaption {
   position: fixed;
   overflow-y: scroll;
   z-index: 1001;
-  background: #1D3557;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 10px), #1D3557;
   color: #fff;
   -webkit-transition: 0.5s;
   -o-transition: 0.5s;
@@ -185,7 +185,7 @@ figure figcaption {
   bottom: 7px;
   left: 0;
   right: 0;
-  background-color: #2D6A4F;
+  background-color: #40916C;
   visibility: hidden;
   -webkit-transform: scaleX(0);
   -moz-transform: scaleX(0);
@@ -211,7 +211,7 @@ figure figcaption {
   transform: scaleX(1);
 }
 #colorlib-aside #colorlib-main-menu ul li.active a {
-  color: #2D6A4F;
+  color: #40916C;
 }
 #colorlib-aside #colorlib-main-menu ul li.active a:after {
   visibility: visible;
@@ -284,6 +284,9 @@ figure figcaption {
   float: left;
   margin-bottom: 10em;
   clear: both;
+}
+#colorlib-hero .overlay {
+  background: rgba(29, 53, 87, 0.55);
 }
 #colorlib-hero .flexslider {
   border: none;
@@ -428,7 +431,7 @@ body.offcanvas #colorlib-aside {
   -o-transform: translateX(0);
   transform: translateX(0);
   width: 300px;
-  background: #1D3557;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 10px), #1D3557;
   z-index: 999;
   position: fixed;
 }
