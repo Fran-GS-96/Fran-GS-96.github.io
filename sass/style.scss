@@ -189,7 +189,8 @@ figure {
 	position: fixed;
 	overflow-y: scroll;
 	z-index: 1001;
-	background: $brand-gray;
+	background: $brand-primary;
+	color: $brand-white;
 	@include transition(.5s);
 
 	@media screen and (max-width: $screen-sm) {
@@ -220,7 +221,7 @@ figure {
 		a{
 			display: block;
 			text-align: center;
-			color: $brand-black;
+			color: $brand-white;
 			padding-right: .3em;
 		}
 	}
@@ -246,7 +247,7 @@ figure {
 				text-transform: uppercase;
 				letter-spacing: 1px;
 				a {
-					color: rgba(0,0,0,.7);
+					color: rgba(255,255,255,.75);
 					text-decoration: none;
 					position: relative;
 					padding: 10px 0;
@@ -259,7 +260,7 @@ figure {
 						bottom: 7px;
 						left: 0;
 						right: 0;
-						background-color: $brand-primary;
+						background-color: $brand-color-2;
 						visibility: hidden;
 						-webkit-transform: scaleX(0);
 						-moz-transform: scaleX(0);
@@ -274,7 +275,7 @@ figure {
 					}
 					&:hover {
 						text-decoration: none;
-						color: rgba(0,0,0,1);
+						color: $brand-white;
 						
 						&:after {
 							visibility: visible;
@@ -288,7 +289,7 @@ figure {
 				}
 				&.active {
 					a {
-						color: $brand-primary;
+						color: $brand-color-2;
 						&:after {
 							visibility: visible;
 							-webkit-transform: scaleX(1);
@@ -494,7 +495,7 @@ body {
 		#colorlib-aside {
 			@include translateX(0);
 			width: 300px;
-			background: $brand-gray;
+			background: $brand-primary;
 			z-index: 999;
 			position: fixed;
 		}
