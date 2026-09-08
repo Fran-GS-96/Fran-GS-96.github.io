@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Sass build cache
+.sass-cache/
+
+# Prepros build tool config (local-only)
+prepros-6.config
+
+# Drafts / scratch (not part of the published site)
+index_draft.txt
+index_not.html
+
+# Large source files not meant to be published on the live site
+Poster_Rayos.pptx
+images/*.zip
