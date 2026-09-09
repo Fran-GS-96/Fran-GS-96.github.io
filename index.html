@@ -69,7 +69,14 @@
 						<li><a href="#" data-nav-section="education">Education</a></li>
 						<li><a href="#" data-nav-section="publications">Publications</a></li>
 						<li><a href="#" data-nav-section="multimedia">Multimedia</a></li>
-						<li><a href="#" data-nav-section="experience">Experience</a></li>
+						<li class="has-submenu">
+							<a href="#" data-nav-section="experience">Experience</a>
+							<span class="submenu-toggle collapsed" data-toggle="collapse" data-target="#experience-submenu" aria-expanded="false" aria-controls="experience-submenu"><i class="icon-arrow-down-outline"></i></span>
+							<ul class="collapse submenu" id="experience-submenu">
+								<li><a href="#" data-nav-section="courses-taught">Courses Taught</a></li>
+								<li><a href="#" data-nav-section="other-experience">Other Experience</a></li>
+							</ul>
+						</li>
 						<li><a href="#" data-nav-section="contact">Contact</a></li>
 					</ul>
 				</div>
@@ -427,7 +434,7 @@
 						</div>
 					</div>
 
-					<div class="row">
+					<div class="row" data-section="courses-taught">
 						<div class="col-md-6 col-md-offset-3 col-md-pull-3 animate-box" data-animate-effect="fadeInLeft">
 							<h3 class="colorlib-heading animate-box" style="font-size: 20px;">Courses Taught</h3>
 						</div>
@@ -470,6 +477,7 @@
 						</div>
 					</div>
 
+<!--
 					<div class="row">
 						<div class="col-md-6 col-md-offset-3 col-md-pull-3 animate-box" data-animate-effect="fadeInLeft">
 							<h3 class="colorlib-heading animate-box" style="font-size: 20px; margin-top: 40px;">Teaching Experience</h3>
@@ -486,7 +494,7 @@
 					               </div>
 					               <div class="timeline-label">
 					               	<h2><a href="#">Lecturer, Physics of the Atmosphere at Escuela Técnica Aeronáutica</a> <span>2026</span></h2>
-					                  <!-- <p>Lecturer teaching Physics of the Atmosphere.</p> -->
+					                  <p>Lecturer teaching Physics of the Atmosphere.</p>
 					               </div>
 					            </div>
 					         </article>
@@ -498,7 +506,7 @@
 					               </div>
 					               <div class="timeline-label">
 					               	<h2><a href="#">University Lecturer, Physics at PUCV</a> <span>2024</span></h2>
-					                  <!-- <p>Over the course of two semesters I taught courses like Introduction to Physics and Electromagnetism to engineering students.</p> -->
+					                  <p>Over the course of two semesters I taught courses like Introduction to Physics and Electromagnetism to engineering students.</p>
 					               </div>
 					            </div>
 					         </article>
@@ -510,7 +518,7 @@
 					               </div>
 					               <div class="timeline-label">
 					               	<h2><a href="#">Teaching Assistant at PUCV</a> <span>2015-2017</span></h2>
-					                  <!-- <p>During my undergraduate studies I took the responsibility of assisting a number of classes (mechanics, electromagnetism, calculus, etc.)</p> -->
+					                  <p>During my undergraduate studies I took the responsibility of assisting a number of classes (mechanics, electromagnetism, calculus, etc.)</p>
 					               </div>
 					            </div>
 					         </article>
@@ -521,11 +529,13 @@
 					               </div>
 					            </div>
 					         </article>
+-->
+
 					      </div>
 					   </div>
 				   </div>
 
-					<div class="row">
+					<div class="row" data-section="other-experience">
 						<div class="col-md-6 col-md-offset-3 col-md-pull-3 animate-box" data-animate-effect="fadeInLeft">
 							<h3 class="colorlib-heading animate-box" style="font-size: 20px; margin-top: 40px;">Other Professional Experience</h3>
 						</div>
