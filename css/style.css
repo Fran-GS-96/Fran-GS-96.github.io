@@ -1794,4 +1794,54 @@ table.courses-table tbody td:nth-child(2) {
   white-space: nowrap;
 }
 
+#colorlib-aside #colorlib-main-menu ul li.has-submenu .submenu-caret {
+  font-size: 8px;
+  margin-left: 7px;
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.65;
+  -webkit-transition: 0.3s;
+  -o-transition: 0.3s;
+  transition: 0.3s;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > a:hover .submenu-caret {
+  opacity: 1;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu.open .submenu-caret {
+  -webkit-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+  opacity: 1;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > ul.submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  -webkit-transition: 0.35s;
+  -o-transition: 0.35s;
+  transition: 0.35s;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > ul.submenu li {
+  margin: 0 0 8px 0;
+  font-size: 10px;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > ul.submenu li a {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 4px 0;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > ul.submenu li a:after {
+  display: none;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu > ul.submenu li a:hover {
+  color: #fff;
+}
+#colorlib-aside #colorlib-main-menu ul li.has-submenu.open > ul.submenu {
+  max-height: 140px;
+  margin: 12px 0 4px 0;
+}
+
 /*# sourceMappingURL=style.css.map */

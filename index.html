@@ -69,7 +69,13 @@
 						<li><a href="#" data-nav-section="education">Education</a></li>
 						<li><a href="#" data-nav-section="publications">Publications</a></li>
 						<li><a href="#" data-nav-section="multimedia">Multimedia</a></li>
-						<li><a href="#" data-nav-section="experience">Experience</a></li>
+						<li class="has-submenu">
+							<a href="#" class="submenu-parent" data-nav-section="experience">Experience<i class="icon-arrow-down-outline submenu-caret"></i></a>
+							<ul class="submenu">
+								<li><a href="#" data-nav-section="courses-taught">Courses Taught</a></li>
+								<li><a href="#" data-nav-section="other-experience">Other Experience</a></li>
+							</ul>
+						</li>
 						<li><a href="#" data-nav-section="contact">Contact</a></li>
 					</ul>
 				</div>
@@ -427,7 +433,7 @@
 						</div>
 					</div>
 
-					<div class="row">
+					<div class="row" data-section="courses-taught">
 						<div class="col-md-6 col-md-offset-3 col-md-pull-3 animate-box" data-animate-effect="fadeInLeft">
 							<h3 class="colorlib-heading animate-box" style="font-size: 20px;">Courses Taught</h3>
 						</div>
@@ -527,7 +533,7 @@
 				   </div>
 -->
 
-					<div class="row">
+					<div class="row" data-section="other-experience">
 						<div class="col-md-6 col-md-offset-3 col-md-pull-3 animate-box" data-animate-effect="fadeInLeft">
 							<h3 class="colorlib-heading animate-box" style="font-size: 20px; margin-top: 40px;">Other Professional Experience</h3>
 						</div>

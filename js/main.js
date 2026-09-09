@@ -143,6 +143,18 @@
 
 	};
 
+	// Experience submenu (sidebar dropdown)
+	var submenuToggle = function() {
+
+		// Bound directly to the element, not delegated on document, because
+		// clickMenu() returns false (preventDefault + stopPropagation) on the
+		// same click -- a delegated handler would never receive the event.
+		$('#navbar .submenu-parent').on('click', function(){
+			$(this).closest('li.has-submenu').toggleClass('open');
+		});
+
+	};
+
 	var clickMenu = function() {
 
 		$('#navbar a:not([class="external"])').click(function(event){
@@ -295,6 +307,7 @@
 		burgerMenu();
 
 		clickMenu();
+		submenuToggle();
 		// navActive();
 		navigationSection();
 		// windowScroll();
@@ -302,7 +315,13 @@
 
 		mobileMenuOutsideClick();
 		sliderMain();
-		stickyFunction();
+		// sticky-kit plugin isn't loaded on this page (and #sticky_item /
+		// .image-content don't exist here), so calling this threw
+		// "stick_in_parent is not a function" on every load and aborted the
+		// rest of this ready block.
+		if ($.fn.stick_in_parent) {
+			stickyFunction();
+		}
 		owlCrouselFeatureSlide();
 	});
 

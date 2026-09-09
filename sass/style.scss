@@ -1811,3 +1811,53 @@ table.courses-table {
 		white-space: nowrap;
 	}
 }
+
+
+// Experience submenu in the sidebar nav
+#colorlib-aside #colorlib-main-menu ul li.has-submenu {
+	.submenu-caret {
+		font-size: 8px;
+		margin-left: 7px;
+		display: inline-block;
+		vertical-align: middle;
+		opacity: .65;
+		@include transition(.3s);
+	}
+	> a:hover .submenu-caret {
+		opacity: 1;
+	}
+	&.open .submenu-caret {
+		-webkit-transform: rotate(180deg);
+		-ms-transform: rotate(180deg);
+		transform: rotate(180deg);
+		opacity: 1;
+	}
+	> ul.submenu {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		max-height: 0;
+		overflow: hidden;
+		@include transition(.35s);
+		li {
+			margin: 0 0 8px 0;
+			font-size: 10px;
+			a {
+				font-size: 10px;
+				letter-spacing: .5px;
+				color: rgba(255,255,255,.6);
+				padding: 4px 0;
+				&:after {
+					display: none;
+				}
+				&:hover {
+					color: $brand-white;
+				}
+			}
+		}
+	}
+	&.open > ul.submenu {
+		max-height: 140px;
+		margin: 12px 0 4px 0;
+	}
+}
