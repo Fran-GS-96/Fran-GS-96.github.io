@@ -359,7 +359,7 @@ figure {
 	background: $brand-white url(../images/loader.gif) no-repeat center center;
 	width: 100%;
 	float: left;
-	margin-bottom: 10em;
+	margin-bottom: 7.5em;
 	clear: both;
 	.overlay {
 		position: absolute;
@@ -536,14 +536,14 @@ body {
 .colorlib-about,
 .colorlib-services,
 .colorlib-contact{
-	padding-top: 4em;
-	padding-bottom: 9em;
+	padding-top: 3em;
+	padding-bottom: 6.75em;
 	clear: both;
 	width: 100%;
 	display: block;
 	@media screen and (max-width: $screen-sm){
-		padding-top: 5em;
-		padding-bottom: 8em;
+		padding-top: 3.75em;
+		padding-bottom: 6em;
 	}
 }
 
@@ -1333,7 +1333,7 @@ margin-left: -20px;
 	margin-bottom: 5em;
 }
 .colorlib-counters {
-	padding: 3em 0;
+	padding: 2.25em 0;
 	background-size: cover;
 	background-attachment: fixed;
 	background-position: center center;
@@ -1762,14 +1762,14 @@ margin-left: -20px;
 	}
 }
 
-// Courses Taught table
-.courses-table-wrap {
+// Shared table style (Courses Taught / Other Professional Experience)
+.info-table-wrap {
 	overflow-x: auto;
 	margin-bottom: 20px;
 	border-radius: 4px;
 	box-shadow: 0 2px 10px rgba(0,0,0,.08);
 }
-table.courses-table {
+table.info-table {
 	width: 100%;
 	margin-bottom: 0;
 	border-collapse: collapse;
@@ -1860,4 +1860,22 @@ table.courses-table {
 		max-height: 140px;
 		margin: 12px 0 4px 0;
 	}
+}
+
+
+// Pencil icon beside a section sub-heading
+.heading-icon {
+	display: inline-block;
+	margin-right: 12px;
+	width: 34px;
+	height: 34px;
+	line-height: 34px;
+	text-align: center;
+	vertical-align: middle;
+	border-radius: 50%;
+	background: $brand-primary;
+	color: $brand-white;
+	font-size: 14px;
+	position: relative;
+	top: -2px;
 }
