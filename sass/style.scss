@@ -1863,6 +1863,25 @@ table.info-table {
 }
 
 
+// Year-first variant (Education): move the muted/no-wrap "date" styling
+// from column 2 to column 1, and let column 2 read as the main label.
+table.info-table--year-first {
+	th:nth-child(1), td:nth-child(1) { width: 11%; }
+	th:nth-child(2), td:nth-child(2) { width: 27%; }
+	th:nth-child(3), td:nth-child(3) { width: 26%; }
+	th:nth-child(4), td:nth-child(4) { width: 36%; }
+	tbody td:nth-child(1) {
+		color: rgba(0,0,0,.55);
+		white-space: nowrap;
+		font-weight: 400;
+	}
+	tbody td:nth-child(2) {
+		color: rgba(0,0,0,.7);
+		white-space: normal;
+		font-weight: 500;
+	}
+}
+
 // Pencil icon beside a section sub-heading
 .heading-icon {
 	display: inline-block;

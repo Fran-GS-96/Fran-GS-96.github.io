@@ -1844,6 +1844,29 @@ table.info-table tbody td:nth-child(2) {
   margin: 12px 0 4px 0;
 }
 
+table.info-table--year-first th:nth-child(1), table.info-table--year-first td:nth-child(1) {
+  width: 11%;
+}
+table.info-table--year-first th:nth-child(2), table.info-table--year-first td:nth-child(2) {
+  width: 27%;
+}
+table.info-table--year-first th:nth-child(3), table.info-table--year-first td:nth-child(3) {
+  width: 26%;
+}
+table.info-table--year-first th:nth-child(4), table.info-table--year-first td:nth-child(4) {
+  width: 36%;
+}
+table.info-table--year-first tbody td:nth-child(1) {
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+  font-weight: 400;
+}
+table.info-table--year-first tbody td:nth-child(2) {
+  color: rgba(0, 0, 0, 0.7);
+  white-space: normal;
+  font-weight: 500;
+}
+
 .heading-icon {
   display: inline-block;
   margin-right: 12px;
