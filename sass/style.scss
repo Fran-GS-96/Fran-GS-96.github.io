@@ -368,7 +368,7 @@ figure {
 		right: 0;
 		bottom: 0;
 		z-index: 1;
-		background: rgba(13, 27, 42, .36);
+		background: rgba(13, 27, 42, .55);
 	}
 	.flexslider {
 		border: none;
@@ -482,12 +482,14 @@ figure {
 					border: none;
 					font-weight: 400;
 					&.btn-learn{
-						color: $brand-black;
-						border: 1px solid $brand-black;
+						// white, not black: the hero image is dark now
+						color: $brand-white;
+						border: 1px solid rgba(255,255,255,.8);
 						background: transparent !important;
 						&:hover{
-							background: transparent !important;
-							border: 1px solid $brand-black !important;
+							background: rgba(255,255,255,.12) !important;
+							border: 1px solid $brand-white !important;
+							color: $brand-white;
 						}
 					}
 					@media screen and (max-width: $screen-sm ) {
