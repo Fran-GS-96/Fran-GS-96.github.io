@@ -1886,10 +1886,8 @@ table.info-table--year-first tbody td:nth-child(2) {
 }
 
 .sports-carousel {
-  background: #0D1B2A;
-  border-radius: 4px;
+  background: #fff;
   overflow: hidden;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
 }
 .sports-carousel .item {
   height: 460px;
@@ -1929,18 +1927,23 @@ table.info-table--year-first tbody td:nth-child(2) {
   padding: 0;
   margin: 0;
   margin-top: -22px;
-  background: rgba(255, 255, 255, 0.88);
-  color: #1D3557;
+  background: rgba(29, 53, 87, 0.85);
+  color: #fff;
   border-radius: 50%;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 }
 .colorlib-sports .sports-carousel.owl-theme .owl-nav .owl-prev:hover, .colorlib-sports .sports-carousel.owl-theme .owl-nav .owl-next:hover {
-  background: #fff;
-  color: #2D6A4F;
+  background: #2D6A4F;
+  color: #fff;
 }
 .colorlib-sports .sports-carousel.owl-theme .owl-nav .owl-direction {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  color: inherit;
   font-size: 15px;
   line-height: 44px;
+  display: inline;
 }
 
 /*# sourceMappingURL=style.css.map */

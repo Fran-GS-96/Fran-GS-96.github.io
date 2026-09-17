@@ -1903,10 +1903,10 @@ table.info-table--year-first {
 
 // Sports photo carousel
 .sports-carousel {
-	background: $brand-color-5;
-	border-radius: 4px;
+	// same as the page background, so the letterboxing around portrait
+	// photos is invisible and the pictures just sit on the page
+	background: $brand-bg-color;
 	overflow: hidden;
-	box-shadow: 0 2px 14px rgba(0,0,0,.12);
 	.item {
 		height: 460px;
 		display: block;
@@ -1948,17 +1948,25 @@ table.info-table--year-first {
 		padding: 0;
 		margin: 0;
 		margin-top: -22px;
-		background: rgba(255,255,255,.88);
-		color: $brand-primary;
+		background: rgba(29, 53, 87, .85);
+		color: $brand-white;
 		border-radius: 50%;
-		box-shadow: 0 1px 6px rgba(0,0,0,.2);
 		&:hover {
-			background: $brand-white;
-			color: $brand-color-2;
+			background: $brand-color-2;
+			color: $brand-white;
 		}
 	}
+	// The theme styles ANY descendant matching [class*="owl-"], and the icon
+	// carries .owl-direction -- so the <i> itself was picking up the grey
+	// rounded box and rendering a second shape behind the button.
 	.owl-direction {
+		background: none;
+		padding: 0;
+		margin: 0;
+		border-radius: 0;
+		color: inherit;
 		font-size: 15px;
 		line-height: 44px;
+		display: inline;
 	}
 }
