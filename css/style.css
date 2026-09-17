@@ -292,7 +292,7 @@ figure figcaption {
   right: 0;
   bottom: 0;
   z-index: 1;
-  background: rgba(13, 27, 42, 0.55);
+  background: rgba(13, 27, 42, 0.5);
 }
 #colorlib-hero .flexslider {
   border: none;
