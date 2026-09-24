@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecuación de tendencia del geopotencial — interactivo (Holton, cap. 6)</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #ffffff;
+    --surface-2:      #fafaf9;
+    --page-plane:     #f2f2f2;
+    --text-primary:   #000000;
+    --text-secondary: #3a3a3a;
+    --text-muted:     #5a5a5a;
+    --gridline:       #e2e2e2;
+    --baseline:       #b5b5b5;
+    --border:         rgba(0,0,0,0.15);
+    --series-1: #2a78d6; /* azul    */
+    --series-2: #eb6834; /* naranjo */
+    --series-3: #1baf7a; /* aqua    */
+    --series-4: #4a3aa7; /* violeta */
+    --div-low:  #2563eb; /* diverging: negativo (azul) */
+    --div-mid:  #f0efec; /* diverging: cero (gris neutro) */
+    --div-high: #dc2626; /* diverging: positivo (rojo) */
+    --accent-warn: #b45309;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--page-plane);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+  }
+  .viz-root { max-width: 1460px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  h1 { font-size: 1.45rem; margin: 0 0 6px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 16px; line-height: 1.55; max-width: 1000px; }
+  code, .mono { font-family: "Cambria Math", Cambria, Georgia, serif; }
+
+  /* ---------- bloque de ecuación ---------- */
+  .eqbox {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 16px; overflow-x: auto;
+  }
+  .eq { font-family: "Cambria Math", Cambria, Georgia, serif; font-size: 1.15rem;
+        display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
+  .eq .grp { display: inline-flex; flex-direction: column; align-items: center; }
+  .eq .grp .under { border-top: 2px solid currentColor; margin-top: 3px; width: 100%; }
+  .eq .grp .tag { font-size: 0.72rem; font-family: system-ui, sans-serif; letter-spacing: .04em;
+                  margin-top: 3px; font-weight: 700; }
+  .tagA { color: var(--series-4); }
+  .tagB { color: var(--series-1); }
+  .tagC { color: var(--series-2); }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle;
+          margin: 0 3px; font-size: 0.82em; line-height: 1.15; }
+  .frac .num { border-bottom: 1.2px solid currentColor; padding: 0 3px; }
+  .frac .den { padding: 0 3px; }
+
+  details.deriv { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+                  padding: 0 20px; margin-bottom: 18px; }
+  details.deriv > summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 0.95rem; }
+  details.deriv .body { padding-bottom: 16px; font-size: 0.9rem; line-height: 1.65; color: var(--text-secondary); }
+  details.deriv .body ol { padding-left: 20px; }
+  details.deriv .body li { margin-bottom: 12px; }
+  details.deriv .eq { display: block; font-size: 1.02rem; margin: 9px 0; white-space: normal; }
+  details.deriv .eq b { font-weight: 700; }
+  .note { background: var(--surface-2); border-left: 3px solid var(--series-4);
+          padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 12px 0; }
+
+  .toolbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;}
+  .presets { display:flex; gap:8px; flex-wrap: wrap; }
+  button.btn {
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+    padding: 7px 13px; border-radius: 8px; font-size: 0.82rem; cursor: pointer;
+  }
+  button.btn:hover { background: var(--gridline); }
+  button.btn.active { background: var(--series-4); color: #fff; border-color: var(--series-4); }
+
+  .layout-grid { display: grid; grid-template-columns: 245px minmax(0, 1fr) 245px; gap: 18px; align-items: start; }
+  .side-panel {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 15px 16px; position: sticky; top: 12px; display: flex; flex-direction: column; gap: 15px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+  }
+  .side-panel .group h2 {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-secondary); margin: 0 0 11px; padding-bottom: 7px; border-bottom: 1px solid var(--gridline);
+  }
+  .side-panel .group { display: flex; flex-direction: column; gap: 13px; }
+  .center-col { min-width: 0; }
+
+  .ctrl { display: flex; flex-direction: column; gap: 3px; }
+  .ctrl label { font-size: 0.78rem; color: var(--text-secondary); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .ctrl label .val { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .ctrl input[type="range"] { width: 100%; accent-color: var(--series-1); cursor: pointer; }
+  .ctrl .hint { font-size: 0.7rem; color: var(--text-muted); line-height: 1.35; }
+  .radio-row { display:flex; flex-direction: column; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
+  .radio-row label { display:flex; align-items:center; justify-content: flex-start; gap: 6px; cursor: pointer; }
+
+  .info-strip {
+    display: flex; flex-wrap: wrap; gap: 10px 20px;
+    font-size: 0.82rem; color: var(--text-secondary);
+    margin-bottom: 16px; padding: 12px 16px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .info-strip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .verdict { font-weight: 700; }
+  .verdict.deep { color: var(--div-low); }
+  .verdict.fill { color: var(--div-high); }
+  .verdict.none { color: var(--text-muted); }
+
+  .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px 10px; margin-bottom: 20px; position: relative;
+  }
+  .chart-title { font-size: 0.95rem; font-weight: 700; margin: 0 0 3px; }
+  .chart-title .badge {
+    font-size: 0.66rem; padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+    margin-right: 7px; font-weight: 700; letter-spacing: .04em; color: #fff;
+  }
+  .badge.A { background: var(--series-4); }
+  .badge.B { background: var(--series-1); }
+  .badge.C { background: var(--series-2); }
+  .badge.M { background: #555; }
+  .chart-note { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 8px; line-height: 1.5; }
+  .legend { display:flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-secondary); margin: 2px 0 6px; }
+  .legend span.k { display:inline-flex; align-items:center; gap:6px; }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display:inline-block; }
+  svg { display: block; width: 100%; height: auto; }
+  .axis-line { stroke: var(--baseline); stroke-width: 1; fill: none; }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .tick-label { fill: var(--text-muted); font-size: 10px; }
+  .axis-label { fill: var(--text-secondary); font-size: 11px; }
+  .series-path { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .contour-path { fill: none; stroke-width: 1; stroke: rgba(0,0,0,0.32); }
+  .axis-marker { stroke-width: 1.6; stroke-dasharray: 5 4; fill: none; }
+  .zero-line { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 2 3; }
+  .cross-line { stroke: #333; stroke-width: 1; stroke-dasharray: 3 3; }
+  .panel-title { fill: var(--text-primary); font-size: 11px; font-weight: 700; }
+  .inline-lbl { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 50; opacity: 0;
+    background: rgba(255,255,255,0.97); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; font-size: 0.76rem; color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.13); transition: opacity .08s linear; max-width: 260px;
+  }
+  .tooltip b { font-variant-numeric: tabular-nums; }
+  .tooltip .row { display:flex; justify-content: space-between; gap: 12px; }
+  .tooltip .row i { width: 10px; height: 3px; border-radius: 2px; display:inline-block; margin-right: 5px; }
+
+  details.tablewrap { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; margin-bottom: 20px; }
+  details.tablewrap > summary { cursor:pointer; padding: 12px 0; font-size: 0.86rem; font-weight: 600; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-bottom: 14px; }
+  table.data th, table.data td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--gridline); font-variant-numeric: tabular-nums; }
+  table.data th { color: var(--text-secondary); font-weight: 600; text-align: right; }
+  table.data td:first-child, table.data th:first-child { text-align: left; }
+
+  footer { text-align:center; color: var(--text-muted); font-size: 0.78rem; margin-top: 26px; line-height:1.6; }
+
+  @media (max-width: 1100px) {
+    .layout-grid { grid-template-columns: 1fr; }
+    .side-panel { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+
+  <h1>Ecuación de tendencia del geopotencial</h1>
+  <p class="subtitle">
+    Holton, <i>An Introduction to Dynamic Meteorology</i> (4ª ed.), §6.3.1, ec. (6.23).
+    La ecuación relaciona la tendencia local del geopotencial <span class="mono">&chi; &equiv; &part;&Phi;/&part;t</span>
+    con dos forzantes que se pueden leer directamente de un mapa: la <b>advección de vorticidad absoluta</b> (término B)
+    y la <b>advección diferencial de temperatura</b> (término C).
+    Mueve los controles laterales para ver cómo cada término cambia de forma, de signo y de estructura vertical.
+  </p>
+
+  <div class="eqbox">
+    <div class="eq">
+      <span class="grp">
+        <span>[ &nabla;&sup2; + <span class="frac"><span class="num">&part;</span><span class="den">&part;p</span></span>
+          ( <span class="frac"><span class="num">f&#8320;&sup2;</span><span class="den">&sigma;</span></span>
+          <span class="frac"><span class="num">&part;</span><span class="den">&part;p</span></span> ) ] &chi;</span>
+        <span class="under" style="border-color:var(--series-4)"></span>
+        <span class="tag tagA">A · operador (respuesta)</span>
+      </span>
+      <span>&nbsp;=&nbsp;</span>
+      <span class="grp">
+        <span>&minus; f&#8320; <b>V</b><sub>g</sub>&sdot;&nabla;( <span class="frac"><span class="num">1</span><span class="den">f&#8320;</span></span>&nabla;&sup2;&Phi; + f )</span>
+        <span class="under" style="border-color:var(--series-1)"></span>
+        <span class="tag tagB">B · advección de vorticidad absoluta</span>
+      </span>
+      <span>&nbsp;&minus;&nbsp;</span>
+      <span class="grp">
+        <span><span class="frac"><span class="num">&part;</span><span class="den">&part;p</span></span>
+          [ &minus;<span class="frac"><span class="num">f&#8320;&sup2;</span><span class="den">&sigma;</span></span>
+          <b>V</b><sub>g</sub>&sdot;&nabla;( &minus;<span class="frac"><span class="num">&part;&Phi;</span><span class="den">&part;p</span></span> ) ]</span>
+        <span class="under" style="border-color:var(--series-2)"></span>
+        <span class="tag tagC">C · advección diferencial de temperatura</span>
+      </span>
+    </div>
+  </div>
+
+  <details class="deriv">
+    <summary>▸ Derivación paso a paso (de la vorticidad CG y la termodinámica a la ec. 6.23)</summary>
+    <div class="body">
+      <ol>
+        <li>
+          <b>Ecuación de vorticidad cuasi-geostrófica</b> (6.19). Partiendo de la ecuación de vorticidad
+          escalada y eliminando la divergencia ageostrófica con la ecuación de continuidad:
+          <div class="eq">&part;&zeta;<sub>g</sub>/&part;t = &minus;<b>V</b><sub>g</sub>&sdot;&nabla;(&zeta;<sub>g</sub>+f) + f&#8320; &part;&omega;/&part;p</div>
+          Como <span class="mono">&zeta;<sub>g</sub> = (1/f&#8320;)&nabla;&sup2;&Phi;</span> y las derivadas parciales conmutan,
+          con <span class="mono">&chi; &equiv; &part;&Phi;/&part;t</span> queda <b>(6.21)</b>:
+          <div class="eq">(1/f&#8320;)&nabla;&sup2;&chi; = &minus;<b>V</b><sub>g</sub>&sdot;&nabla;((1/f&#8320;)&nabla;&sup2;&Phi; + f) + f&#8320; &part;&omega;/&part;p</div>
+        </li>
+        <li>
+          <b>Ecuación termodinámica cuasi-geostrófica</b> (6.13b), con calentamiento diabático J = 0:
+          <div class="eq">&part;/&part;t(&minus;&part;&Phi;/&part;p) = &minus;<b>V</b><sub>g</sub>&sdot;&nabla;(&minus;&part;&Phi;/&part;p) &minus; &sigma;&omega;</div>
+          Multiplicando por f&#8320;/&sigma; y derivando respecto de p se obtiene <b>(6.22)</b>:
+          <div class="eq">&part;/&part;p( (f&#8320;/&sigma;) &part;&chi;/&part;p ) = &minus;&part;/&part;p[ (f&#8320;/&sigma;) <b>V</b><sub>g</sub>&sdot;&nabla;(&part;&Phi;/&part;p) ] &minus; f&#8320; &part;&omega;/&part;p</div>
+        </li>
+        <li>
+          <b>Se elimina &omega;.</b> Nota que &omega; aparece con signos opuestos: en (6.21) el estiramiento
+          <span class="mono">&part;&omega;/&part;p &gt; 0</span> genera vorticidad, y en (6.22) destruye la misma cantidad de
+          <i>vorticidad de estiramiento</i> (anomalía normalizada de estabilidad estática). Multiplicando ambas por f&#8320;
+          y sumando, el término de &omega; se cancela exactamente y se obtiene <b>(6.23)</b>:
+          <div class="eq">[&nabla;&sup2; + &part;/&part;p(f&#8320;&sup2;/&sigma; &part;/&part;p)]&chi;
+            = &minus;f&#8320;<b>V</b><sub>g</sub>&sdot;&nabla;((1/f&#8320;)&nabla;&sup2;&Phi; + f)
+            &minus; &part;/&part;p[&minus;(f&#8320;&sup2;/&sigma;)<b>V</b><sub>g</sub>&sdot;&nabla;(&minus;&part;&Phi;/&part;p)]</div>
+          Si se conoce &Phi; en un instante, B y C son <i>funciones forzantes conocidas</i> y (6.23) es una EDP
+          lineal en la incógnita &chi;.
+        </li>
+      </ol>
+      <div class="note">
+        <b>El signo, que es lo que más se equivoca.</b> Para una perturbación tipo onda
+        <span class="mono">&chi; &prop; cos(kx)</span>, el término A actúa como
+        <span class="mono">&minus;(k&sup2;+l&sup2;+&lambda;&sup2;)&chi;</span>: es <b>proporcional a menos &chi;</b>.
+        Por lo tanto <b>&chi; tiene signo opuesto al forzamiento B+C</b>. Forzamiento negativo ⇒ &chi; &gt; 0 ⇒ se construye dorsal.
+        Forzamiento positivo ⇒ &chi; &lt; 0 ⇒ se profundiza la vaguada.
+      </div>
+      <div class="note">
+        <b>Conexión con la vorticidad potencial cuasi-geostrófica.</b> Usando la regla de la cadena en C y el
+        viento térmico (<span class="mono">f&#8320;&part;<b>V</b><sub>g</sub>/&part;p = <b>k</b>&times;&nabla;(&part;&Phi;/&part;p)</span>,
+        que hace desaparecer un término por perpendicularidad), (6.23) se reescribe como una simple conservación,
+        ec. (6.24)–(6.25):
+        <div class="eq">D<sub>g</sub>q/Dt = 0, &nbsp; q = (1/f&#8320;)&nabla;&sup2;&Phi; + f + &part;/&part;p( (f&#8320;/&sigma;)&part;&Phi;/&part;p )</div>
+        es decir: vorticidad relativa + planetaria + de estiramiento, conservada siguiendo el movimiento geostrófico.
+      </div>
+    </div>
+  </details>
+
+  <details class="deriv">
+    <summary>▸ El modelo idealizado que grafica esta página</summary>
+    <div class="body">
+      Se usa la distribución de Holton (6.20) extendida a tres dimensiones, con
+      <span class="mono">l = 0</span> (corte este–oeste, sin estructura meridional de la onda):
+      <div class="eq">&Phi;(x,p) = &Phi;&#8320;(p) &minus; f&#8320; U(p) y + &Phi;<sub>a</sub>(p) sin[ kx + &alpha;(p) ]</div>
+      <ul>
+        <li><span class="mono">U(p)</span>: viento zonal medio. Crece desde la superficie hasta el <b>nivel del jet</b> (≈250 hPa) y ahí se hace constante. Por viento térmico, el cizalle fija el gradiente meridional de temperatura: intenso abajo, nulo sobre el jet.</li>
+        <li><span class="mono">&Phi;<sub>a</sub>(p)</span>: amplitud de la onda. Crece con la altura y <b>satura en la tropopausa</b>, igual que U.</li>
+        <li><span class="mono">&alpha;(p)</span>: <b>fase</b>. Si &alpha; crece hacia arriba, el eje de la vaguada se corre hacia el <b>oeste</b> con la altura: es la <i>inclinación</i> característica de una onda baroclínica en desarrollo. La inclinación se concentra en la baja troposfera.</li>
+      </ul>
+      Con este campo, la autoadvección de vorticidad por la onda se anula
+      (<span class="mono">u&prime;<sub>g</sub>&part;&zeta;<sub>g</sub>/&part;x + v&prime;<sub>g</sub>&part;&zeta;<sub>g</sub>/&part;y = 0</span>),
+      de modo que todo es analítico salvo las derivadas en p, que se calculan numéricamente:
+      <div class="eq">B = &Phi;<sub>a</sub> k ( U k&sup2; &minus; &beta; ) cos(kx+&alpha;)</div>
+      <div class="eq">&minus;<b>V</b><sub>g</sub>&sdot;&nabla;T&nbsp;&prop;&nbsp; k [ (U &Phi;&prime;<sub>a</sub> &minus; U&prime; &Phi;<sub>a</sub>) cos(kx+&alpha;) &minus; U &Phi;<sub>a</sub> &alpha;&prime; sin(kx+&alpha;) ]</div>
+      <div class="eq">C = &minus;(f&#8320;&sup2;/&sigma;) &part;/&part;p [ &minus;<b>V</b><sub>g</sub>&sdot;&nabla;(&minus;&part;&Phi;/&part;p) ]</div>
+      Además, tanto la amplitud <span class="mono">&Phi;<sub>a</sub></span> como el viento medio
+      <span class="mono">U</span> <b>saturan en la tropopausa</b> (nivel del jet, ≈250 hPa) y la inclinación se
+      concentra bajo ~600 hPa. Por eso la advección térmica es intensa en la baja troposfera y se anula arriba,
+      tal como describe Holton («above the 500-hPa level the temperature gradient is usually weaker…»).
+      <br><br>
+      La ecuación (6.23) se resuelve como problema de contorno en p (esquema tridiagonal, 91 niveles entre
+      1000 y 100 hPa) con &chi; = 0 en el tope y, en la base, una de dos opciones seleccionables en el panel derecho:
+      <b>(i)</b> &chi; = 0 en 1000 hPa — equivale a suponer que la presión en superficie no cambia, que es el supuesto
+      implícito del argumento cualitativo de Holton; o <b>(ii)</b> la condición térmica (6.26),
+      <span class="mono">&part;&chi;/&part;p|<sub>p&#8320;</sub> = &minus;[&minus;<b>V</b><sub>g</sub>&sdot;&nabla;(&minus;&part;&Phi;/&part;p)]<sub>p&#8320;</sub></span>,
+      que deja que la advección térmica en superficie también genere tendencia.
+    </div>
+  </details>
+
+  <div class="toolbar">
+    <div class="presets">
+      <button class="btn" data-preset="baroclinic">Onda baroclínica en desarrollo</button>
+      <button class="btn" data-preset="notilt">Onda sin inclinación</button>
+      <button class="btn" data-preset="long">Onda larga (retrógrada)</button>
+      <button class="btn" data-preset="short">Onda corta (respuesta confinada)</button>
+    </div>
+    <button class="btn" id="resetBtn">Restaurar valores por defecto</button>
+  </div>
+
+  <div class="layout-grid">
+
+    <!-- ===== Panel izquierdo: parámetros físicos ===== -->
+    <aside class="side-panel">
+      <div class="group">
+        <h2>Onda de geopotencial</h2>
+
+        <div class="ctrl">
+          <label><span>&Phi;<sub>a</sub> en 500 hPa</span> <span class="val" id="v_amp"></span></label>
+          <input type="range" id="amp" min="0" max="2500" step="25">
+          <span class="hint">Amplitud del geopotencial [m²/s²]. 800 m²/s² ≈ 82 m de altura geopotencial.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>Crecimiento vertical <span class="val" id="v_grow"></span></label>
+          <input type="range" id="grow" min="0.4" max="8" step="0.1">
+          <span class="hint">Razón de amplitud tope/superficie.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>&Delta;&alpha; — inclinación con la altura <span class="val" id="v_tilt"></span></label>
+          <input type="range" id="tilt" min="-180" max="180" step="5">
+          <span class="hint">Desfase entre 1000 y 100 hPa. &gt; 0 = eje inclinado hacia el <b>oeste</b> con la altura (onda en desarrollo). 0 = onda vertical.</span>
+        </div>
+
+        <div class="ctrl">
+          <label><span>L<sub>x</sub> — longitud de onda</span> <span class="val" id="v_L"></span></label>
+          <input type="range" id="L" min="1000" max="14000" step="100">
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Flujo medio y ambiente</h2>
+
+        <div class="ctrl">
+          <label>U en superficie <span class="val" id="v_U0"></span></label>
+          <input type="range" id="U0" min="-10" max="30" step="0.5">
+        </div>
+
+        <div class="ctrl">
+          <label>&Delta;U — cizalle vertical <span class="val" id="v_dU"></span></label>
+          <input type="range" id="dU" min="-20" max="70" step="1">
+          <span class="hint">U(100 hPa) − U(1000 hPa). Por viento térmico fija el gradiente meridional de temperatura.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>f&#8320; <span class="val" id="v_f0"></span></label>
+          <input type="range" id="f0" min="-1.5" max="1.5" step="0.05">
+          <span class="hint">×10⁻⁴ s⁻¹. Negativo = hemisferio sur. Ojo: en (6.23) f&#8320; sólo aparece al cuadrado, así que cambiar de hemisferio invierte vientos y vorticidad, pero <b>no</b> la tendencia asociada a un mismo campo &Phi;.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>&beta; <span class="val" id="v_beta"></span></label>
+          <input type="range" id="beta" min="0" max="3" step="0.05">
+          <span class="hint">×10⁻¹¹ m⁻¹s⁻¹. Valor típico en 45°: 1.6.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>&sigma; — estabilidad estática <span class="val" id="v_sigma"></span></label>
+          <input type="range" id="sigma" min="0.4" max="6" step="0.1">
+          <span class="hint">×10⁻⁶ m²Pa⁻²s⁻². Controla la escala vertical λ⁻¹ de la respuesta.</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Columna central ===== -->
+    <main class="center-col">
+      <div class="info-strip" id="infoStrip"></div>
+
+      <!-- 0) estructura del campo -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge M">0</span>El campo &Phi;&prime;(x, p): sección vertical este–oeste</p>
+        <p class="chart-note">
+          Perturbación del geopotencial. Las líneas punteadas marcan los ejes de la <b>vaguada</b> (azul) y de la
+          <b>dorsal</b> (roja); si &Delta;&alpha; &gt; 0 se inclinan hacia el oeste con la altura. La línea gris horizontal
+          es el nivel de análisis p*: define los cortes horizontales y las columnas verticales de los demás gráficos.
+        </p>
+        <svg id="svgPhi" viewBox="0 0 800 340"></svg>
+      </div>
+
+      <!-- 1) término B -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge B">B</span>Advección de vorticidad absoluta en p*</p>
+        <p class="chart-note">
+          B = &minus;f&#8320;<b>V</b><sub>g</sub>&sdot;&nabla;&zeta;<sub>g</sub> &minus; f&#8320;&beta;v<sub>g</sub>.
+          La advección de vorticidad <b>relativa</b> propaga la onda hacia el este; la de vorticidad
+          <b>planetaria</b> la hace retrogradar. <b>B se anula exactamente sobre los ejes</b> de vaguada y dorsal
+          (ahí <span class="mono">&nabla;&zeta;<sub>g</sub> = 0</span> y <span class="mono">v<sub>g</sub> = 0</span>):
+          por eso B no puede intensificar el sistema, sólo moverlo.
+        </p>
+        <div class="legend" id="legB"></div>
+        <svg id="svgB" viewBox="0 0 800 230"></svg>
+      </div>
+
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge B">B</span>Sección vertical del término B</p>
+        <p class="chart-note">
+          B está en <b>cuadratura</b> con &Phi;&prime;: es máximo entre los ejes y nulo sobre ellos. Como la amplitud
+          crece con la altura, B domina el forzamiento en la <b>alta troposfera</b>.
+        </p>
+        <svg id="svgBsec" viewBox="0 0 800 300"></svg>
+      </div>
+
+      <!-- 2) advección térmica -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge C">C</span>Advección de temperatura &minus;<b>V</b><sub>g</sub>&sdot;&nabla;T (sección vertical)</p>
+        <p class="chart-note">
+          Rojo = advección cálida, azul = advección fría. Con inclinación hacia el oeste aparece <b>aire frío bajo la
+          vaguada y aire cálido bajo la dorsal</b> — exactamente la Fig. 6.9 de Holton. Con &Delta;&alpha; = 0 la advección
+          térmica sobre los ejes se anula.
+        </p>
+        <svg id="svgAdv" viewBox="0 0 800 300"></svg>
+      </div>
+
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge C">C</span>Término C: la advección térmica <i>diferencial</i></p>
+        <p class="chart-note">
+          C = &minus;(f&#8320;&sup2;/&sigma;) &part;(advección térmica)/&part;p, es decir la variación de la advección
+          térmica <b>con la altura</b>. Izquierda: perfil vertical de la advección térmica en la columna bajo cada eje.
+          Derecha: el término C resultante. La advección fría fuerte abajo y débil arriba bajo la vaguada da C &gt; 0,
+          y por el cambio de signo del operador, &chi; &lt; 0: <b>la vaguada se profundiza en altura</b>.
+        </p>
+        <svg id="svgC" viewBox="0 0 800 330"></svg>
+      </div>
+
+      <!-- 3) balance -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge A">A</span>Balance de forzamientos en p*</p>
+        <p class="chart-note">
+          B y C en la <b>misma escala</b>, y su suma. Observa dónde cae cada máximo respecto de los ejes:
+          B desplaza, C intensifica.
+        </p>
+        <div class="legend" id="legBal"></div>
+        <svg id="svgBal" viewBox="0 0 800 230"></svg>
+      </div>
+
+      <!-- 4) chi vertical -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge A">A</span>Estructura vertical de la tendencia &chi;(p)</p>
+        <p class="chart-note">
+          Solución de (6.23) en la columna vertical que pasa por el eje de la vaguada y por el de la dorsal
+          <i>del nivel p*</i>, separando la respuesta a cada forzante. Se grafica la tendencia de altura geopotencial &part;Z/&part;t = &chi;/g, en metros por 12 h.
+          Nota que la respuesta <b>no está confinada a los niveles del forzamiento</b>: el operador A la reparte
+          en la vertical con escala &lambda;&#8315;&sup1;.
+        </p>
+        <div class="legend" id="legChi"></div>
+        <svg id="svgChi" viewBox="0 0 800 340"></svg>
+      </div>
+
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge A">A</span>Sección vertical de la tendencia &part;Z/&part;t</p>
+        <p class="chart-note" id="chiSecNote">
+          Azul = caídas de altura (profundización), rojo = ascensos (construcción de dorsal). Compara con el
+          gráfico 0: si el máximo de caída coincide con el eje de la vaguada, el sistema se <b>intensifica</b>;
+          si está corrido, sólo se <b>propaga</b>.
+        </p>
+        <svg id="svgChiSec" viewBox="0 0 800 300"></svg>
+      </div>
+
+      <details class="tablewrap">
+        <summary>▸ Ver los valores numéricos en p* (vista de tabla)</summary>
+        <div id="tableHost"></div>
+      </details>
+
+      <footer>
+        Dinámica de la Atmósfera · Unidad A · Ecuación de tendencia del geopotencial<br>
+        Basado en Holton (2004), <i>An Introduction to Dynamic Meteorology</i>, 4ª ed., §6.2.2–6.3.1, ecs. (6.19)–(6.26).
+      </footer>
+    </main>
+
+    <!-- ===== Panel derecho: visualización ===== -->
+    <aside class="side-panel">
+      <div class="group">
+        <h2>Nivel y dominio</h2>
+
+        <div class="ctrl">
+          <label>p* — nivel de análisis <span class="val" id="v_plev"></span></label>
+          <input type="range" id="plev" min="100" max="1000" step="10">
+          <span class="hint">Define los cortes en x, las columnas verticales y la tabla.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>Ancho del dominio en x <span class="val" id="v_xspan"></span></label>
+          <input type="range" id="xspan" min="1000" max="24000" step="500">
+          <span class="hint">Ventana <b>fija en km</b>, centrada en x = 0: al cambiar L<sub>x</sub> se ve entrar o salir ondas del dominio.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>Ventana en x <span class="val" id="v_nwaves"></span></label>
+          <input type="range" id="nwaves" min="1" max="4" step="0.25">
+          <span class="hint">Alternativa: fijar el número de longitudes de onda mostradas (el dominio se reescala con L<sub>x</sub>).</span>
+        </div>
+
+        <div class="ctrl">
+          <div class="radio-row">
+            <label><input type="radio" name="xmode" value="fixed" checked> usar ancho fijo en km</label>
+            <label><input type="radio" name="xmode" value="waves"> usar N longitudes de onda</label>
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <label>Contornos por sección <span class="val" id="v_nlev"></span></label>
+          <input type="range" id="nlev" min="0" max="16" step="2">
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Condición de borde inferior</h2>
+        <div class="radio-row">
+          <label><input type="radio" name="bcbot" value="D" checked> &chi; = 0 en 1000 hPa</label>
+          <label><input type="radio" name="bcbot" value="N"> Térmica, ec. (6.26)</label>
+        </div>
+        <span class="hint">La primera equivale a suponer que <b>no cambia la presión en superficie</b>: aísla el efecto de B y C en la troposfera libre (es el supuesto implícito en el argumento cualitativo de Holton). La segunda deja que la advección térmica en superficie también genere tendencia.</span>
+      </div>
+
+      <div class="group">
+        <h2>Sección de &chi;</h2>
+        <div class="radio-row">
+          <label><input type="radio" name="chimode" value="tot" checked> Respuesta total (B + C)</label>
+          <label><input type="radio" name="chimode" value="B"> Sólo término B</label>
+          <label><input type="radio" name="chimode" value="C"> Sólo término C</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Lecturas rápidas</h2>
+        <div class="hint" id="readouts" style="font-size:0.75rem; line-height:1.7;"></div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==================================================================
+     0. Constantes, parámetros y presets
+     ================================================================== */
+  const P_TOP = 10000;      // Pa  (100 hPa)
+  const P_BOT = 100000;     // Pa  (1000 hPa)
+  const NP    = 91;         // niveles  -> dp = 1000 Pa = 10 hPa
+  const DP    = (P_BOT - P_TOP) / (NP - 1);
+  const NX    = 321;        // puntos en x
+  const G     = 9.81;
+  const SEC12H = 43200;
+  const XI_S  = 0.40;       // concentración de la inclinación en niveles bajos
+  const XI_JET = 0.83;      // nivel del jet (xi) ~ 250 hPa
+
+  const PGRID = new Float64Array(NP);
+  for (let j = 0; j < NP; j++) PGRID[j] = P_TOP + j * DP;   // j=0 -> tope
+
+  const DEFAULTS = {
+    amp: 1200, grow: 3.0, tilt: 75, L: 3000,
+    U0: 5, dU: 25, f0: 1.0, beta: 1.6, sigma: 2.0,
+    plev: 500, xspan: 8000, nwaves: 2, nlev: 8
+  };
+
+  const PRESETS = {
+    baroclinic: {},                                                  // = defaults
+    notilt:     { tilt: 0 },
+    long:       { L: 10000, tilt: 25, U0: 5, dU: 15, plev: 500, xspan: 20000 },
+    short:      { L: 1600, tilt: 60, grow: 4, plev: 300, xspan: 8000 }
+  };
+
+  const IDS = ["amp","grow","tilt","L","U0","dU","f0","beta","sigma","plev","xspan","nwaves","nlev"];
+  const els = {};
+  IDS.forEach(id => els[id] = document.getElementById(id));
+
+  function applyParams(obj) {
+    IDS.forEach(id => { if (obj[id] !== undefined) els[id].value = obj[id]; });
+  }
+  function setRadio(name, value) {
+    const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (r) r.checked = true;
+  }
+  function loadDefaults() {
+    applyParams(DEFAULTS);
+    setRadio("xmode", "fixed");
+    setRadio("bcbot", "D");
+    setRadio("chimode", "tot");
+  }
+
+  /* ==================================================================
+     1. Utilidades SVG / escalas / formato
+     ================================================================== */
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function clearSvg(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(name).trim();
+  }
+  function linScale(domain, range) {
+    const [d0, d1] = domain, [r0, r1] = range;
+    const m = (r1 - r0) / ((d1 - d0) || 1e-30);
+    return v => r0 + (v - d0) * m;
+  }
+  function niceTicks(min, max, count) {
+    if (max < min) { const t = min; min = max; max = t; }
+    if (max <= min) max = min + 1;
+    const step0 = (max - min) / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const norm = step0 / mag;
+    let step;
+    if (norm < 1.5) step = mag; else if (norm < 3) step = 2 * mag;
+    else if (norm < 7) step = 5 * mag; else step = 10 * mag;
+    const ticks = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step)
+      ticks.push(Math.round(v * 1e9) / 1e9);
+    return ticks;
+  }
+  function fmt(v, d) {
+    if (!isFinite(v)) return "—";
+    if (v === 0) return "0";
+    const av = Math.abs(v);
+    if (d !== undefined) return v.toFixed(d);
+    if (av >= 1000) return v.toLocaleString("es-CL", {maximumFractionDigits: 0});
+    if (av >= 10)   return v.toLocaleString("es-CL", {maximumFractionDigits: 1});
+    if (av >= 0.1)  return v.toLocaleString("es-CL", {maximumFractionDigits: 2});
+    return v.toPrecision(2);
+  }
+  // Escoge un exponente común para una serie de valores; devuelve {scale, label}
+  function pickExp(maxAbs) {
+    if (!(maxAbs > 0) || !isFinite(maxAbs)) return {scale: 1, sup: null, pre: ""};
+    const e = Math.floor(Math.log10(maxAbs));
+    if (e === 0) return {scale: 1, sup: null, pre: ""};
+    return {scale: Math.pow(10, e), sup: supStr(e), pre: "×10" + supStr(e) + " "};
+  }
+  const SUPS = {"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+  function supStr(e) { return String(e).split("").map(c => SUPS[c] || c).join(""); }
+
+  /* --- marco cartesiano genérico --- */
+  function drawFrame(svg, box, xDomain, yDomain, xLabel, yLabel, opts) {
+    const o = opts || {};
+    const {x0, x1, y0, y1} = box;
+    const xScale = linScale(xDomain, [x0, x1]);
+    const yScale = linScale(yDomain, [y1, y0]);
+    const g = svgEl("g", {});
+    svg.appendChild(g);
+
+    const xt = o.xTicks || niceTicks(Math.min(...xDomain), Math.max(...xDomain), o.nxt || 7);
+    const yt = o.yTicks || niceTicks(Math.min(...yDomain), Math.max(...yDomain), o.nyt || 5);
+
+    xt.forEach(t => {
+      const px = xScale(t);
+      if (px < x0 - 0.5 || px > x1 + 0.5) return;
+      g.appendChild(svgEl("line", {x1: px, x2: px, y1: y0, y2: y1, class: "grid-line"}));
+      const lbl = svgEl("text", {x: px, y: y1 + 15, class: "tick-label", "text-anchor": "middle"});
+      lbl.textContent = (o.xFmt || fmt)(t);
+      g.appendChild(lbl);
+    });
+    yt.forEach(t => {
+      const py = yScale(t);
+      if (py < y0 - 0.5 || py > y1 + 0.5) return;
+      g.appendChild(svgEl("line", {x1: x0, x2: x1, y1: py, y2: py, class: "grid-line"}));
+      const lbl = svgEl("text", {x: x0 - 7, y: py + 3.5, class: "tick-label", "text-anchor": "end"});
+      lbl.textContent = (o.yFmt || fmt)(t);
+      g.appendChild(lbl);
+    });
+
+    g.appendChild(svgEl("line", {x1: x0, x2: x1, y1: y1, y2: y1, class: "axis-line"}));
+    g.appendChild(svgEl("line", {x1: x0, x2: x0, y1: y0, y2: y1, class: "axis-line"}));
+
+    if (xLabel) {
+      const t = svgEl("text", {x: (x0 + x1) / 2, y: y1 + 31, class: "axis-label", "text-anchor": "middle"});
+      t.textContent = xLabel; g.appendChild(t);
+    }
+    if (yLabel) {
+      const cy = (y0 + y1) / 2;
+      const t = svgEl("text", {x: x0 - 42, y: cy, class: "axis-label", "text-anchor": "middle",
+                               transform: `rotate(-90, ${x0 - 42}, ${cy})`});
+      t.textContent = yLabel; g.appendChild(t);
+    }
+    return {xScale, yScale, box};
+  }
+
+  function pathOf(xScale, yScale, xs, ys) {
+    let d = "";
+    for (let i = 0; i < xs.length; i++) {
+      const px = xScale(xs[i]), py = yScale(ys[i]);
+      if (!isFinite(px) || !isFinite(py)) continue;
+      d += (d === "" ? "M" : "L") + px.toFixed(2) + "," + py.toFixed(2) + " ";
+    }
+    return d.trim();
+  }
+
+  /* --- colormap divergente --- */
+  function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  let CLOW = [37,99,235], CMID = [240,239,236], CHIGH = [220,38,38];
+  function refreshColors() {
+    CLOW = hexToRgb(cssVar("--div-low") || "#2563eb");
+    CMID = hexToRgb(cssVar("--div-mid") || "#f0efec");
+    CHIGH = hexToRgb(cssVar("--div-high") || "#dc2626");
+  }
+  function divColor(t) {           // t en [-1, 1]
+    t = Math.max(-1, Math.min(1, t));
+    const a = t < 0 ? CLOW : CHIGH;
+    const s = Math.abs(t);
+    return [CMID[0] + (a[0] - CMID[0]) * s,
+            CMID[1] + (a[1] - CMID[1]) * s,
+            CMID[2] + (a[2] - CMID[2]) * s];
+  }
+  function divHex(t) {
+    const c = divColor(t);
+    return "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+  }
+
+  /* --- imagen de campo (canvas -> dataURL) --- */
+  const hmCanvas = document.createElement("canvas");
+  function fieldImage(Z, nx, ny, vmax) {
+    hmCanvas.width = nx; hmCanvas.height = ny;
+    const ctx = hmCanvas.getContext("2d");
+    const img = ctx.createImageData(nx, ny);
+    let q = 0;
+    for (let j = 0; j < ny; j++) {
+      for (let i = 0; i < nx; i++) {
+        const c = divColor(vmax > 0 ? Z[j][i] / vmax : 0);
+        img.data[q++] = c[0]; img.data[q++] = c[1]; img.data[q++] = c[2]; img.data[q++] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return hmCanvas.toDataURL();
+  }
+
+  /* --- marching squares (segmentos en coordenadas de grilla) --- */
+  function contourSegs(Z, nx, ny, level) {
+    const out = [];
+    const ip = (a, b) => (level - a) / ((b - a) || 1e-30);
+    for (let j = 0; j < ny - 1; j++) {
+      for (let i = 0; i < nx - 1; i++) {
+        const v0 = Z[j][i], v1 = Z[j][i + 1], v2 = Z[j + 1][i + 1], v3 = Z[j + 1][i];
+        let idx = 0;
+        if (v0 > level) idx |= 8;
+        if (v1 > level) idx |= 4;
+        if (v2 > level) idx |= 2;
+        if (v3 > level) idx |= 1;
+        if (idx === 0 || idx === 15) continue;
+        const top    = [i + ip(v0, v1), j];
+        const right  = [i + 1, j + ip(v1, v2)];
+        const bottom = [i + ip(v3, v2), j + 1];
+        const left   = [i, j + ip(v0, v3)];
+        switch (idx) {
+          case 1: case 14: out.push([left, bottom]); break;
+          case 2: case 13: out.push([bottom, right]); break;
+          case 3: case 12: out.push([left, right]); break;
+          case 4: case 11: out.push([top, right]); break;
+          case 6: case 9:  out.push([top, bottom]); break;
+          case 7: case 8:  out.push([top, left]); break;
+          case 5:  out.push([top, left]); out.push([bottom, right]); break;
+          case 10: out.push([top, right]); out.push([bottom, left]); break;
+        }
+      }
+    }
+    return out;
+  }
+
+  /* ==================================================================
+     2. Física del modelo idealizado
+     ================================================================== */
+  function readParams() {
+    const p = {};
+    IDS.forEach(id => p[id] = parseFloat(els[id].value));
+    p.bcBottom = document.querySelector('input[name="bcbot"]:checked').value;
+    p.xmode = document.querySelector('input[name="xmode"]:checked').value;
+    return p;
+  }
+
+  function derive(p) {
+    const L  = p.L * 1000;                       // m
+    const k  = 2 * Math.PI / L;                  // 1/m
+    let f0r  = p.f0;
+    if (Math.abs(f0r) < 0.2) f0r = f0r < 0 ? -0.2 : 0.2;   // evita la degeneración f0 -> 0
+    const f0 = f0r * 1e-4;
+    const beta  = p.beta * 1e-11;
+    const sigma = p.sigma * 1e-6;
+    const g0 = Math.log(Math.max(0.05, p.grow));            // exp(g0*xi) : razón tope/superficie
+    const dAlpha = p.tilt * Math.PI / 180;
+    const tanhN = Math.tanh(1 / XI_S);
+
+    const XI = new Float64Array(NP), U = new Float64Array(NP),
+          PA = new Float64Array(NP), AL = new Float64Array(NP);
+    const XI500 = (P_BOT - 50000) / (P_BOT - P_TOP);
+    for (let j = 0; j < NP; j++) {
+      const xi = (P_BOT - PGRID[j]) / (P_BOT - P_TOP);      // 0 en superficie, 1 en el tope
+      XI[j] = xi;
+      // perfil de jet: cizalle máximo cerca de la superficie, nulo en el nivel del jet
+      const jp = xi < XI_JET ? Math.sin(Math.PI * xi / (2 * XI_JET)) : 1;
+      const jp500 = XI500 < XI_JET ? Math.sin(Math.PI * XI500 / (2 * XI_JET)) : 1;
+      U[j]  = p.U0 + p.dU * jp;
+      PA[j] = p.amp * Math.exp(g0 * (jp - jp500));
+      AL[j] = dAlpha * Math.tanh(xi / XI_S) / tanhN;
+    }
+    // derivadas respecto de p (diferencias centradas)
+    const dU = ddp(U), dPA = ddp(PA), dAL = ddp(AL);
+
+    /* ---- componentes cos(kx) / sin(kx) de cada campo ---- */
+    const PhiC = new Float64Array(NP), PhiS = new Float64Array(NP);
+    const ZetC = new Float64Array(NP), ZetS = new Float64Array(NP);
+    const VgC  = new Float64Array(NP), VgS  = new Float64Array(NP);
+    const BrelC = new Float64Array(NP), BrelS = new Float64Array(NP);
+    const BplaC = new Float64Array(NP), BplaS = new Float64Array(NP);
+    const BC = new Float64Array(NP), BS = new Float64Array(NP);
+    const AdC = new Float64Array(NP), AdS = new Float64Array(NP);
+
+    for (let j = 0; j < NP; j++) {
+      const ca = Math.cos(AL[j]), sa = Math.sin(AL[j]);
+      // Phi' = PA sin(kx+a)
+      PhiC[j] = PA[j] * sa;  PhiS[j] = PA[j] * ca;
+      // zeta = -(k^2 PA / f0) sin(kx+a)
+      ZetC[j] = -(k * k * PA[j] / f0) * sa;  ZetS[j] = -(k * k * PA[j] / f0) * ca;
+      // v_g = (k PA / f0) cos(kx+a)
+      VgC[j] = (k * PA[j] / f0) * ca;  VgS[j] = -(k * PA[j] / f0) * sa;
+      // B_rel = U k^3 PA cos(kx+a) ; B_pla = -beta k PA cos(kx+a)
+      const br = U[j] * k * k * k * PA[j], bp = -beta * k * PA[j];
+      BrelC[j] = br * ca; BrelS[j] = -br * sa;
+      BplaC[j] = bp * ca; BplaS[j] = -bp * sa;
+      BC[j] = BrelC[j] + BplaC[j];  BS[j] = BrelS[j] + BplaS[j];
+      // advección térmica: P cos(kx+a) + Q sin(kx+a)
+      const P_ = k * (U[j] * dPA[j] - dU[j] * PA[j]);
+      const Q_ = -k * U[j] * PA[j] * dAL[j];
+      AdC[j] = P_ * ca + Q_ * sa;
+      AdS[j] = -P_ * sa + Q_ * ca;
+    }
+    // término C = -(f0^2/sigma) d(adv)/dp
+    const fac = -(f0 * f0) / sigma;
+    const dAdC = ddp(AdC), dAdS = ddp(AdS);
+    const CC = new Float64Array(NP), CS = new Float64Array(NP);
+    for (let j = 0; j < NP; j++) { CC[j] = fac * dAdC[j]; CS[j] = fac * dAdS[j]; }
+
+    /* ---- resolver (6.23) ---- */
+    const lam2 = k * k * sigma / (f0 * f0);
+    const bc = p.bcBottom;
+    const chiB = { c: solveBVP(BC, lam2, sigma, f0, 0, bc),
+                   s: solveBVP(BS, lam2, sigma, f0, 0, bc) };
+    const chiC = { c: solveBVP(CC, lam2, sigma, f0, -AdC[NP - 1], bc),
+                   s: solveBVP(CS, lam2, sigma, f0, -AdS[NP - 1], bc) };
+    const chiT = { c: new Float64Array(NP), s: new Float64Array(NP) };
+    for (let j = 0; j < NP; j++) {
+      chiT.c[j] = chiB.c[j] + chiC.c[j];
+      chiT.s[j] = chiB.s[j] + chiC.s[j];
+    }
+
+    /* ---- verificación: residuo de la ecuación ---- */
+    let resid = 0, forceMax = 1e-30;
+    for (let j = 1; j < NP - 1; j++) {
+      const d2 = (chiT.c[j - 1] - 2 * chiT.c[j] + chiT.c[j + 1]) / (DP * DP);
+      const lhs = -k * k * chiT.c[j] + (f0 * f0 / sigma) * d2;
+      const rhs = BC[j] + CC[j];
+      resid = Math.max(resid, Math.abs(lhs - rhs));
+      forceMax = Math.max(forceMax, Math.abs(rhs));
+    }
+
+    return {k, f0, beta, sigma, L, U, PA, AL, XI, dU, dPA, dAL, lam2,
+            PhiC, PhiS, ZetC, ZetS, VgC, VgS, BrelC, BrelS, BplaC, BplaS,
+            BC, BS, AdC, AdS, CC, CS, chiB, chiC, chiT,
+            residRel: resid / forceMax};
+  }
+
+  function ddp(arr) {
+    const d = new Float64Array(NP);
+    for (let j = 1; j < NP - 1; j++) d[j] = (arr[j + 1] - arr[j - 1]) / (2 * DP);
+    d[0] = (arr[1] - arr[0]) / DP;
+    d[NP - 1] = (arr[NP - 1] - arr[NP - 2]) / DP;
+    return d;
+  }
+
+  /* Resuelve  X'' - lam2 X = (sigma/f0^2) F , con X(pTop)=0 y, abajo,
+     X(pBot)=0 (bc="D", sin cambio de presión en superficie) o X'(pBot)=gb (bc="N", ec. 6.26) */
+  function solveBVP(F, lam2, sigma, f0, gb, bc) {
+    const n = NP, a = new Float64Array(n), b = new Float64Array(n),
+          c = new Float64Array(n), d = new Float64Array(n);
+    const R = sigma / (f0 * f0);
+    const h2 = DP * DP;
+    b[0] = 1; c[0] = 0; d[0] = 0;                       // Dirichlet arriba
+    for (let j = 1; j < n - 1; j++) {
+      a[j] = 1; b[j] = -(2 + lam2 * h2); c[j] = 1; d[j] = h2 * R * F[j];
+    }
+    if (bc === "N") {                                   // Neumann abajo (punto fantasma)
+      a[n - 1] = 2; b[n - 1] = -(2 + lam2 * h2);
+      d[n - 1] = h2 * R * F[n - 1] - 2 * DP * gb;
+    } else {                                            // Dirichlet abajo
+      a[n - 1] = 0; b[n - 1] = 1; d[n - 1] = 0;
+    }
+    // Thomas
+    const cp = new Float64Array(n), dp = new Float64Array(n), x = new Float64Array(n);
+    cp[0] = c[0] / b[0]; dp[0] = d[0] / b[0];
+    for (let j = 1; j < n; j++) {
+      const m = b[j] - a[j] * cp[j - 1];
+      cp[j] = c[j] / m;
+      dp[j] = (d[j] - a[j] * dp[j - 1]) / m;
+    }
+    x[n - 1] = dp[n - 1];
+    for (let j = n - 2; j >= 0; j--) x[j] = dp[j] - cp[j] * x[j + 1];
+    return x;
+  }
+
+  /* ==================================================================
+     3. Construcción de campos 2D y perfiles
+     ================================================================== */
+  function field2D(compC, compS, xs, k) {
+    const Z = new Array(NP);
+    for (let j = 0; j < NP; j++) {
+      const row = new Float64Array(xs.length);
+      for (let i = 0; i < xs.length; i++)
+        row[i] = compC[j] * Math.cos(k * xs[i]) + compS[j] * Math.sin(k * xs[i]);
+      Z[j] = row;
+    }
+    return Z;
+  }
+  function profile1D(compC, compS, xs, k, j) {
+    const out = new Float64Array(xs.length);
+    for (let i = 0; i < xs.length; i++)
+      out[i] = compC[j] * Math.cos(k * xs[i]) + compS[j] * Math.sin(k * xs[i]);
+    return out;
+  }
+  // valor de un campo (cos/sin) sobre el eje inclinado de vaguada/dorsal en cada nivel
+  function onAxis(compC, compS, AL, k, which) {   // which = -1 (vaguada) | +1 (dorsal)
+    const out = new Float64Array(NP);
+    for (let j = 0; j < NP; j++) {
+      const X = which * Math.PI / 2;              // kx + alpha = ±pi/2
+      out[j] = compC[j] * Math.cos(X - AL[j]) + compS[j] * Math.sin(X - AL[j]);
+    }
+    return out;
+  }
+  // perfil vertical en una COLUMNA de x fijo (así se lee la Fig. 6.9 de Holton)
+  function colAt(compC, compS, k, x) {
+    const out = new Float64Array(NP);
+    const c = Math.cos(k * x), sn = Math.sin(k * x);
+    for (let j = 0; j < NP; j++) out[j] = compC[j] * c + compS[j] * sn;
+    return out;
+  }
+  function axisX(AL, k, which, xmin, xmax) {      // posición x del eje, rama más cercana al centro
+    const out = new Float64Array(NP);
+    const Lm = 2 * Math.PI / k, xc = (xmin + xmax) / 2;
+    for (let j = 0; j < NP; j++) {
+      let x = (which * Math.PI / 2 - AL[j]) / k;
+      x += Math.round((xc - x) / Lm) * Lm;
+      out[j] = x;
+    }
+    return out;
+  }
+  function maxAbs(arr2d) {
+    let m = 0;
+    for (let j = 0; j < arr2d.length; j++)
+      for (let i = 0; i < arr2d[j].length; i++) {
+        const v = Math.abs(arr2d[j][i]);
+        if (v > m) m = v;
+      }
+    return m;
+  }
+  function maxAbs1(arr) { let m = 0; for (const v of arr) if (Math.abs(v) > m) m = Math.abs(v); return m; }
+
+  /* ==================================================================
+     4. Dibujo de secciones verticales (x–p) con barra de color
+     ================================================================== */
+  function drawSection(svg, W, H, Z, xs_km, opts) {
+    clearSvg(svg);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const m = {top: 12, right: 86, bottom: 38, left: 58};
+    const box = {x0: m.left, x1: W - m.right, y0: m.top, y1: H - m.bottom};
+    const vmax = opts.vmax !== undefined ? opts.vmax : maxAbs(Z);
+    const sc = pickExp(vmax);
+
+    const fr = drawFrame(svg, box, [xs_km[0], xs_km[xs_km.length - 1]], [P_BOT / 100, P_TOP / 100],
+      "x [km]", "presión [hPa]",
+      {yTicks: [1000, 850, 700, 500, 300, 200, 100], nxt: 7});
+
+    // imagen del campo
+    const url = fieldImage(Z, xs_km.length, NP, vmax);
+    const img = svgEl("image", {x: box.x0, y: box.y0,
+      width: box.x1 - box.x0, height: box.y1 - box.y0, preserveAspectRatio: "none"});
+    img.setAttribute("href", url);
+    img.setAttributeNS("http://www.w3.org/1999/xlink", "href", url);
+    svg.insertBefore(img, svg.firstChild);
+    // rejilla y ejes por encima de la imagen
+    svg.appendChild(svg.firstChild.nextSibling);
+
+    // contornos
+    const nlev = opts.nlev | 0;
+    if (nlev > 0 && vmax > 0) {
+      const gx = linScale([0, xs_km.length - 1], [box.x0, box.x1]);
+      const gy = linScale([0, NP - 1], [box.y0, box.y1]);
+      const gC = svgEl("g", {});
+      for (let li = 1; li <= nlev / 2; li++) {
+        const lv = vmax * li / (nlev / 2 + 0.5);
+        [-lv, lv].forEach(level => {
+          const segs = contourSegs(Z, xs_km.length, NP, level);
+          let d = "";
+          segs.forEach(s => {
+            d += `M${gx(s[0][0]).toFixed(1)},${gy(s[0][1]).toFixed(1)}L${gx(s[1][0]).toFixed(1)},${gy(s[1][1]).toFixed(1)} `;
+          });
+          if (d) gC.appendChild(svgEl("path", {d: d.trim(), class: "contour-path",
+            "stroke-dasharray": level < 0 ? "4 3" : "none"}));
+        });
+      }
+      svg.appendChild(gC);
+    }
+
+    // ejes de vaguada / dorsal
+    if (opts.axes) {
+      const {AL, k, xmin, xmax} = opts.axes;
+      [[-1, cssVar("--div-low"), "vaguada", 12], [1, cssVar("--div-high"), "dorsal", 26]].forEach(([w, col, name, dy]) => {
+        const ax = axisX(AL, k, w, xmin, xmax);
+        const xsA = [], ysA = [];
+        for (let j = 0; j < NP; j++) { xsA.push(ax[j] / 1000); ysA.push(PGRID[j] / 100); }
+        const d = pathOf(fr.xScale, fr.yScale, xsA, ysA);
+        svg.appendChild(svgEl("path", {d, class: "axis-marker", stroke: col}));
+        // etiqueta en el primer nivel (desde arriba) en que el eje entra en el recuadro
+        let jl = -1;
+        for (let j = 0; j < NP; j++) {
+          const px = fr.xScale(xsA[j]);
+          if (px > box.x0 + 3 && px < box.x1 - 46) { jl = j; break; }
+        }
+        if (jl >= 0) {
+          const t = svgEl("text", {x: fr.xScale(xsA[jl]) + 4,
+                                   y: Math.min(fr.yScale(ysA[jl]) + dy, box.y1 - 4),
+                                   class: "inline-lbl", fill: col});
+          t.textContent = name; svg.appendChild(t);
+        }
+      });
+    }
+
+    // nivel p*
+    if (opts.plev) {
+      const py = fr.yScale(opts.plev);
+      svg.appendChild(svgEl("line", {x1: box.x0, x2: box.x1, y1: py, y2: py, class: "cross-line"}));
+      const t = svgEl("text", {x: box.x1 - 3, y: py - 4, class: "inline-lbl",
+        fill: "#333", "text-anchor": "end"});
+      t.textContent = "p*"; svg.appendChild(t);
+    }
+
+    // barra de color
+    const cbX = box.x1 + 16, cbW = 13, cbT = box.y0 + 6, cbB = box.y1 - 6;
+    const nsw = 48;
+    for (let i = 0; i < nsw; i++) {
+      const t0 = -1 + 2 * i / nsw, t1 = -1 + 2 * (i + 1) / nsw;
+      const yT = cbT + (1 - (t1 + 1) / 2) * (cbB - cbT);
+      const yB = cbT + (1 - (t0 + 1) / 2) * (cbB - cbT);
+      svg.appendChild(svgEl("rect", {x: cbX, y: yT, width: cbW, height: (yB - yT) + 0.6,
+        fill: divHex((t0 + t1) / 2)}));
+    }
+    svg.appendChild(svgEl("rect", {x: cbX, y: cbT, width: cbW, height: cbB - cbT,
+      fill: "none", stroke: cssVar("--border")}));
+    [1, 0.5, 0, -0.5, -1].forEach(t => {
+      const py = cbT + (1 - (t + 1) / 2) * (cbB - cbT);
+      const lbl = svgEl("text", {x: cbX + cbW + 4, y: py + 3.5, class: "tick-label"});
+      lbl.textContent = fmt(t * vmax / sc.scale, 1);
+      svg.appendChild(lbl);
+    });
+    const ct = svgEl("text", {x: W - 3, y: box.y0 - 1, class: "axis-label", "text-anchor": "end"});
+    ct.textContent = (sc.pre + (opts.unit || "")).trim();
+    svg.appendChild(ct);
+
+    return {frame: fr, vmax, scale: sc.scale, pre: sc.pre};
+  }
+
+  /* ==================================================================
+     5. Tooltip
+     ================================================================== */
+  const tip = document.getElementById("tooltip");
+  function showTip(evt, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = 1;
+    const r = tip.getBoundingClientRect();
+    let x = evt.clientX + 14, y = evt.clientY + 14;
+    if (x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - 14;
+    if (y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - 14;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function hideTip() { tip.style.opacity = 0; }
+
+  function attachLineHover(svg, frame, xs_km, series, unitTxt) {
+    const {box, xScale} = frame;
+    const g = svgEl("g", {});
+    const vline = svgEl("line", {x1: 0, x2: 0, y1: box.y0, y2: box.y1, class: "cross-line", opacity: 0});
+    g.appendChild(vline);
+    const dots = series.map(s => {
+      const c = svgEl("circle", {r: 4, fill: s.color, stroke: "#fff", "stroke-width": 2, opacity: 0});
+      g.appendChild(c); return c;
+    });
+    const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0, height: box.y1 - box.y0,
+      fill: "transparent", style: "cursor:crosshair"});
+    g.appendChild(rect);
+    svg.appendChild(g);
+
+    rect.addEventListener("mousemove", evt => {
+      const pt = svg.getBoundingClientRect();
+      const vb = svg.viewBox.baseVal;
+      const px = (evt.clientX - pt.left) / pt.width * vb.width;
+      const frac = (px - box.x0) / (box.x1 - box.x0);
+      const i = Math.max(0, Math.min(xs_km.length - 1, Math.round(frac * (xs_km.length - 1))));
+      const cx = xScale(xs_km[i]);
+      vline.setAttribute("x1", cx); vline.setAttribute("x2", cx); vline.setAttribute("opacity", 1);
+      let html = `<div style="font-weight:700;margin-bottom:4px">x = ${fmt(xs_km[i], 0)} km</div>`;
+      series.forEach((s, n) => {
+        dots[n].setAttribute("cx", cx);
+        dots[n].setAttribute("cy", frame.yScale(s.values[i]));
+        dots[n].setAttribute("opacity", 1);
+        html += `<div class="row"><span><i style="background:${s.color}"></i>${s.name}</span><b>${fmt(s.values[i] / (s.scale || 1), 2)}</b></div>`;
+      });
+      if (unitTxt) html += `<div style="margin-top:4px;color:#666">${unitTxt}</div>`;
+      showTip(evt, html);
+    });
+    rect.addEventListener("mouseleave", () => {
+      hideTip(); vline.setAttribute("opacity", 0); dots.forEach(d => d.setAttribute("opacity", 0));
+    });
+  }
+
+  function attachSectionHover(svg, frame, Z, xs_km, name, unit, scale, pre) {
+    const {box} = frame;
+    const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0, height: box.y1 - box.y0,
+      fill: "transparent", style: "cursor:crosshair"});
+    svg.appendChild(rect);
+    rect.addEventListener("mousemove", evt => {
+      const pt = svg.getBoundingClientRect();
+      const vb = svg.viewBox.baseVal;
+      const px = (evt.clientX - pt.left) / pt.width * vb.width;
+      const py = (evt.clientY - pt.top) / pt.height * vb.height;
+      const fi = (px - box.x0) / (box.x1 - box.x0);
+      const fj = (py - box.y0) / (box.y1 - box.y0);
+      const i = Math.max(0, Math.min(xs_km.length - 1, Math.round(fi * (xs_km.length - 1))));
+      const j = Math.max(0, Math.min(NP - 1, Math.round(fj * (NP - 1))));
+      showTip(evt, `<div style="font-weight:700;margin-bottom:3px">${name}</div>` +
+        `<div class="row"><span>x</span><b>${fmt(xs_km[i], 0)} km</b></div>` +
+        `<div class="row"><span>p</span><b>${fmt(PGRID[j] / 100, 0)} hPa</b></div>` +
+        `<div class="row"><span>valor</span><b>${fmt(Z[j][i] / scale, 2)} ${pre}${unit}</b></div>`);
+    });
+    rect.addEventListener("mouseleave", hideTip);
+  }
+
+  function legendHTML(items) {
+    return items.map(it => `<span class="k"><i style="background:${it.color}"></i>${it.name}</span>`).join("");
+  }
+
+  /* ==================================================================
+     6. Render principal
+     ================================================================== */
+  let rafId = null;
+  function scheduleRender() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => { rafId = null; render(); });
+  }
+
+  function updateLabels(p) {
+    document.getElementById("v_amp").textContent   = fmt(p.amp, 0) + " m²/s² (≈ " + fmt(p.amp / G, 0) + " m)";
+    document.getElementById("v_grow").textContent  = "×" + p.grow.toFixed(1);
+    document.getElementById("v_tilt").textContent  = p.tilt.toFixed(0) + "°";
+    document.getElementById("v_L").textContent     = fmt(p.L, 0) + " km";
+    document.getElementById("v_U0").textContent    = p.U0.toFixed(1) + " m/s";
+    document.getElementById("v_dU").textContent    = p.dU.toFixed(0) + " m/s";
+    document.getElementById("v_f0").textContent    = p.f0.toFixed(2) + " ×10⁻⁴ s⁻¹";
+    document.getElementById("v_beta").textContent  = p.beta.toFixed(2) + " ×10⁻¹¹";
+    document.getElementById("v_sigma").textContent = p.sigma.toFixed(1) + " ×10⁻⁶";
+    document.getElementById("v_plev").textContent  = fmt(p.plev, 0) + " hPa";
+    document.getElementById("v_xspan").textContent  = fmt(p.xspan, 0) + " km";
+    document.getElementById("v_nwaves").textContent = p.nwaves.toFixed(2) + " L";
+    const fixed = document.querySelector('input[name="xmode"]:checked').value === "fixed";
+    els.xspan.disabled = !fixed;  els.nwaves.disabled = fixed;
+    els.xspan.parentElement.style.opacity  = fixed ? 1 : 0.45;
+    els.nwaves.parentElement.style.opacity = fixed ? 0.45 : 1;
+    document.getElementById("v_nlev").textContent  = p.nlev === 0 ? "sin contornos" : p.nlev;
+  }
+
+  const COL = {
+    B:   cssVarSafe("--series-1", "#2a78d6"),
+    C:   cssVarSafe("--series-2", "#eb6834"),
+    T:   cssVarSafe("--series-4", "#4a3aa7"),
+    Z:   cssVarSafe("--series-3", "#1baf7a"),
+    low: cssVarSafe("--div-low", "#2563eb"),
+    high:cssVarSafe("--div-high", "#dc2626")
+  };
+  function cssVarSafe(n, f) {
+    try { const v = cssVar(n); return v || f; } catch (e) { return f; }
+  }
+
+  function render() {
+    refreshColors();
+    const p = readParams();
+    updateLabels(p);
+    const d = derive(p);
+    const k = d.k;
+
+    // dominio en x
+    const halfSpan = (p.xmode === "fixed" ? p.xspan * 1000 : p.nwaves * d.L) / 2;
+    const xs = new Float64Array(NX), xs_km = new Float64Array(NX);
+    for (let i = 0; i < NX; i++) {
+      xs[i] = -halfSpan + 2 * halfSpan * i / (NX - 1);
+      xs_km[i] = xs[i] / 1000;
+    }
+    const xminM = xs[0], xmaxM = xs[NX - 1];
+
+    // nivel p*
+    const jStar = Math.max(0, Math.min(NP - 1, Math.round((p.plev * 100 - P_TOP) / DP)));
+    const pStar = PGRID[jStar] / 100;
+
+    /* ---------- info strip ---------- */
+    const lamInv = Math.sqrt(1 / d.lam2) / 100;              // hPa
+    const cR = d.U[jStar] - d.beta / (k * k);
+    // columnas verticales bajo el eje de la vaguada y de la dorsal DEL NIVEL p*
+    const xTr = axisX(d.AL, k, -1, xminM, xmaxM)[jStar];
+    const xRd = axisX(d.AL, k, +1, xminM, xmaxM)[jStar];
+    const chiTrough = colAt(d.chiT.c, d.chiT.s, k, xTr);
+    const chiRidge  = colAt(d.chiT.c, d.chiT.s, k, xRd);
+    const dZdt = v => v / G * SEC12H;
+    const trTend = dZdt(chiTrough[jStar]);
+    let verdict, vclass;
+    if (Math.abs(trTend) < 1) { verdict = "sin desarrollo neto"; vclass = "none"; }
+    else if (trTend < 0) { verdict = "la vaguada se profundiza"; vclass = "deep"; }
+    else { verdict = "la vaguada se rellena"; vclass = "fill"; }
+
+    document.getElementById("infoStrip").innerHTML =
+      `k = <b>${(k * 1e6).toFixed(3)}</b>×10⁻⁶ m⁻¹` +
+      ` &nbsp;·&nbsp; escala vertical de la respuesta &lambda;⁻¹ = <b>${fmt(lamInv, 0)} hPa</b>` +
+      ` &nbsp;·&nbsp; velocidad de fase de Rossby c = U − β/k² = <b>${cR.toFixed(1)} m/s</b>` +
+      ` (${cR > 0.2 ? "hacia el este" : cR < -0.2 ? "retrógrada" : "cuasi-estacionaria"})` +
+      ` &nbsp;·&nbsp; ∂Z/∂t en el eje de la vaguada en ${fmt(pStar, 0)} hPa = <b>${trTend.toFixed(1)} m/12 h</b>` +
+      ` &nbsp;·&nbsp; <span class="verdict ${vclass}">${verdict}</span>` +
+      ` &nbsp;·&nbsp; residuo numérico de (6.23): <b>${(d.residRel * 100).toExponential(1)}%</b>`;
+
+    /* ---------- lecturas rápidas (panel derecho) ---------- */
+    const advTrough = colAt(d.AdC, d.AdS, k, xTr);
+    const advRidge  = colAt(d.AdC, d.AdS, k, xRd);
+    const Bprof = profile1D(d.BC, d.BS, xs, k, jStar);
+    const Cprof = profile1D(d.CC, d.CS, xs, k, jStar);
+    document.getElementById("readouts").innerHTML =
+      `<b>En p* = ${fmt(pStar, 0)} hPa</b><br>` +
+      `máx |B| = ${maxAbs1(Bprof).toExponential(2)} s⁻³<br>` +
+      `máx |C| = ${maxAbs1(Cprof).toExponential(2)} s⁻³<br>` +
+      `razón C/B = <b>${(maxAbs1(Cprof) / (maxAbs1(Bprof) || 1e-30)).toFixed(2)}</b><br><br>` +
+      `<b>Columna bajo la vaguada de p*</b><br>` +
+      `advección térmica en 900 hPa: ${advTrough[Math.round((90000 - P_TOP) / DP)] > 0 ? "cálida" : "fría"}<br>` +
+      `∂Z/∂t vaguada: <b>${trTend.toFixed(1)} m/12 h</b><br>` +
+      `∂Z/∂t dorsal: <b>${dZdt(chiRidge[jStar]).toFixed(1)} m/12 h</b>`;
+
+    /* ================= 0) Sección de Phi' ================= */
+    const Zphi = field2D(d.PhiC, d.PhiS, xs, k);
+    const svgPhi = document.getElementById("svgPhi");
+    const rPhi = drawSection(svgPhi, 800, 340, Zphi, xs_km, {
+      nlev: p.nlev, unit: "m²/s²", plev: pStar,
+      axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM}
+    });
+    attachSectionHover(svgPhi, rPhi.frame, Zphi, xs_km, "Φ′", "m²/s²", rPhi.scale, rPhi.pre);
+
+    /* ================= 1) Término B en p* ================= */
+    const Brel = profile1D(d.BrelC, d.BrelS, xs, k, jStar);
+    const Bpla = profile1D(d.BplaC, d.BplaS, xs, k, jStar);
+    const svgB = document.getElementById("svgB");
+    drawLineChart(svgB, 800, 230, xs_km, [
+      {name: "advección de vorticidad relativa", values: Brel, color: COL.B},
+      {name: "advección de vorticidad planetaria (−f₀βv_g)", values: Bpla, color: COL.C},
+      {name: "término B (total)", values: Bprof, color: COL.T, width: 2.6}
+    ], "x [km]", "s⁻³", {axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM, j: jStar}});
+    document.getElementById("legB").innerHTML = legendHTML([
+      {name: "vorticidad relativa", color: COL.B},
+      {name: "vorticidad planetaria", color: COL.C},
+      {name: "B total", color: COL.T}
+    ]);
+
+    /* ================= 1b) Sección de B ================= */
+    const ZB = field2D(d.BC, d.BS, xs, k);
+    const svgBsec = document.getElementById("svgBsec");
+    const rB = drawSection(svgBsec, 800, 300, ZB, xs_km, {
+      nlev: p.nlev, unit: "s⁻³", plev: pStar,
+      axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM}
+    });
+    attachSectionHover(svgBsec, rB.frame, ZB, xs_km, "Término B", "s⁻³", rB.scale, rB.pre);
+
+    /* ================= 2) Sección de advección térmica ================= */
+    const Zadv = field2D(d.AdC, d.AdS, xs, k);
+    const svgAdv = document.getElementById("svgAdv");
+    const rA = drawSection(svgAdv, 800, 300, Zadv, xs_km, {
+      nlev: p.nlev, unit: "m²s⁻³Pa⁻¹", plev: pStar,
+      axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM}
+    });
+    attachSectionHover(svgAdv, rA.frame, Zadv, xs_km, "−V_g·∇T", "m²s⁻³Pa⁻¹", rA.scale, rA.pre);
+
+    /* ================= 3) Término C: perfiles verticales ================= */
+    const Ctrough = colAt(d.CC, d.CS, k, xTr);
+    const Cridge  = colAt(d.CC, d.CS, k, xRd);
+    drawTwoPanelVertical(document.getElementById("svgC"), 800, 330,
+      [
+        {title: "Advección térmica −V_g·∇T en la columna",
+         series: [{name: "bajo la vaguada", values: advTrough, color: COL.low},
+                  {name: "bajo la dorsal",  values: advRidge,  color: COL.high}],
+         unit: "m²s⁻³Pa⁻¹"},
+        {title: "Término C en la columna",
+         series: [{name: "bajo la vaguada", values: Ctrough, color: COL.low},
+                  {name: "bajo la dorsal",  values: Cridge,  color: COL.high}],
+         unit: "s⁻³"}
+      ]);
+
+    /* ================= 4) Balance en p* ================= */
+    const Btot = Bprof, Ctot = Cprof;
+    const Sum = new Float64Array(NX);
+    for (let i = 0; i < NX; i++) Sum[i] = Btot[i] + Ctot[i];
+    drawLineChart(document.getElementById("svgBal"), 800, 230, xs_km, [
+      {name: "B", values: Btot, color: COL.B},
+      {name: "C", values: Ctot, color: COL.C},
+      {name: "B + C", values: Sum, color: COL.T, width: 2.6}
+    ], "x [km]", "s⁻³", {axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM, j: jStar}});
+    document.getElementById("legBal").innerHTML = legendHTML([
+      {name: "Término B", color: COL.B},
+      {name: "Término C", color: COL.C},
+      {name: "B + C", color: COL.T}
+    ]);
+
+    /* ================= 5) chi(p) sobre los ejes ================= */
+    const cBt = Array.from(colAt(d.chiB.c, d.chiB.s, k, xTr), dZdt);
+    const cCt = Array.from(colAt(d.chiC.c, d.chiC.s, k, xTr), dZdt);
+    const cTt = Array.from(chiTrough, dZdt);
+    const cBr = Array.from(colAt(d.chiB.c, d.chiB.s, k, xRd), dZdt);
+    const cCr = Array.from(colAt(d.chiC.c, d.chiC.s, k, xRd), dZdt);
+    const cTr = Array.from(chiRidge, dZdt);
+    drawTwoPanelVertical(document.getElementById("svgChi"), 800, 340,
+      [
+        {title: "Columna bajo la vaguada de p*",
+         series: [{name: "sólo B", values: cBt, color: COL.B},
+                  {name: "sólo C", values: cCt, color: COL.C},
+                  {name: "total",  values: cTt, color: COL.T, width: 2.6}],
+         unit: "m/12 h", rawUnits: true},
+        {title: "Columna bajo la dorsal de p*",
+         series: [{name: "sólo B", values: cBr, color: COL.B},
+                  {name: "sólo C", values: cCr, color: COL.C},
+                  {name: "total",  values: cTr, color: COL.T, width: 2.6}],
+         unit: "m/12 h", rawUnits: true}
+      ], true);
+    document.getElementById("legChi").innerHTML = legendHTML([
+      {name: "respuesta sólo a B", color: COL.B},
+      {name: "respuesta sólo a C", color: COL.C},
+      {name: "total", color: COL.T}
+    ]);
+
+    /* ================= 6) Sección de chi ================= */
+    const mode = document.querySelector('input[name="chimode"]:checked').value;
+    const src = mode === "B" ? d.chiB : mode === "C" ? d.chiC : d.chiT;
+    const Zchi0 = field2D(src.c, src.s, xs, k);
+    const Zchi = Zchi0.map(row => Float64Array.from(row, dZdt));
+    const svgChiSec = document.getElementById("svgChiSec");
+    const rC = drawSection(svgChiSec, 800, 300, Zchi, xs_km, {
+      nlev: p.nlev, unit: "m/12 h", plev: pStar,
+      axes: {AL: d.AL, k, xmin: xminM, xmax: xmaxM}
+    });
+    attachSectionHover(svgChiSec, rC.frame, Zchi, xs_km, "∂Z/∂t", "m/12 h", rC.scale, rC.pre);
+
+    /* ================= tabla ================= */
+    buildTable(d, xs, xs_km, k, jStar, pStar);
+  }
+
+  /* ---------- gráfico de líneas en x ---------- */
+  function drawLineChart(svg, W, H, xs_km, series, xLabel, unit, opts) {
+    clearSvg(svg);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const box = {x0: 66, x1: W - 16, y0: 14, y1: H - 38};
+    let vmax = 0;
+    series.forEach(s => { vmax = Math.max(vmax, maxAbs1(s.values)); });
+    if (!(vmax > 0)) vmax = 1;
+    const sc = pickExp(vmax);
+    const dom = [-vmax * 1.12 / sc.scale, vmax * 1.12 / sc.scale];
+    const fr = drawFrame(svg, box, [xs_km[0], xs_km[xs_km.length - 1]], dom,
+      xLabel, (sc.pre + unit).trim(), {nyt: 4});
+    svg.appendChild(svgEl("line", {x1: box.x0, x2: box.x1,
+      y1: fr.yScale(0), y2: fr.yScale(0), class: "zero-line"}));
+
+    // marcas de los ejes de vaguada/dorsal
+    if (opts && opts.axes) {
+      const {AL, k, xmin, xmax, j} = opts.axes;
+      [[-1, cssVar("--div-low"), "V"], [1, cssVar("--div-high"), "D"]].forEach(([w, col, nm]) => {
+        const Lm = 2 * Math.PI / k;
+        let x = (w * Math.PI / 2 - AL[j]) / k;
+        const xc = (xmin + xmax) / 2;
+        x += Math.round((xc - x) / Lm) * Lm;
+        const mMax = Math.ceil((xmax - xmin) / Lm) + 1;
+        for (let mm = -mMax; mm <= mMax; mm++) {
+          const xx = (x + mm * Lm) / 1000;
+          if (xx < xs_km[0] || xx > xs_km[xs_km.length - 1]) continue;
+          const px = fr.xScale(xx);
+          svg.appendChild(svgEl("line", {x1: px, x2: px, y1: box.y0, y2: box.y1,
+            stroke: col, "stroke-width": 1.2, "stroke-dasharray": "5 4", opacity: 0.75}));
+          const t = svgEl("text", {x: px + 3, y: box.y0 + 11, class: "inline-lbl", fill: col});
+          t.textContent = nm; svg.appendChild(t);
+        }
+      });
+    }
+
+    series.forEach(s => {
+      const scaled = Array.from(s.values, v => v / sc.scale);
+      svg.appendChild(svgEl("path", {d: pathOf(fr.xScale, fr.yScale, xs_km, scaled),
+        class: "series-path", stroke: s.color, "stroke-width": s.width || 2}));
+    });
+    attachLineHover(svg, fr, xs_km,
+      series.map(s => ({name: s.name, color: s.color,
+        values: Array.from(s.values, v => v / sc.scale)})),
+      `unidades: ${(sc.pre + unit).trim()}`);
+    return fr;
+  }
+
+  /* ---------- dos paneles de perfiles verticales ---------- */
+  function drawTwoPanelVertical(svg, W, H, panels, shareScale) {
+    clearSvg(svg);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const gap = 56, half = (W - gap) / 2;
+    let gmax = 0;
+    if (shareScale) panels.forEach(pn => pn.series.forEach(s => gmax = Math.max(gmax, maxAbs1(s.values))));
+
+    panels.forEach((pn, idx) => {
+      const ox = idx * (half + gap);
+      const box = {x0: ox + 62, x1: ox + half - 6, y0: 30, y1: H - 38};
+      let vmax = shareScale ? gmax : 0;
+      if (!shareScale) pn.series.forEach(s => vmax = Math.max(vmax, maxAbs1(s.values)));
+      if (!(vmax > 0)) vmax = 1;
+      const sc = pn.rawUnits ? {scale: 1, sup: ""} : pickExp(vmax);
+      const dom = [-vmax * 1.15 / sc.scale, vmax * 1.15 / sc.scale];
+      const fr = drawFrame(svg, box, dom, [P_BOT / 100, P_TOP / 100],
+        pn.rawUnits ? pn.unit : (sc.pre + pn.unit).trim(), idx === 0 ? "presión [hPa]" : "",
+        {yTicks: [1000, 850, 700, 500, 300, 200, 100], nxt: 4});
+      svg.appendChild(svgEl("line", {x1: fr.xScale(0), x2: fr.xScale(0),
+        y1: box.y0, y2: box.y1, class: "zero-line"}));
+      const ttl = svgEl("text", {x: box.x0, y: 16, class: "panel-title"});
+      ttl.textContent = pn.title; svg.appendChild(ttl);
+
+      pn.series.forEach(s => {
+        const xsv = [], ysv = [];
+        for (let j = 0; j < NP; j++) { xsv.push(s.values[j] / sc.scale); ysv.push(PGRID[j] / 100); }
+        svg.appendChild(svgEl("path", {d: pathOf(fr.xScale, fr.yScale, xsv, ysv),
+          class: "series-path", stroke: s.color, "stroke-width": s.width || 2}));
+      });
+
+      // hover
+      const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0,
+        height: box.y1 - box.y0, fill: "transparent", style: "cursor:crosshair"});
+      svg.appendChild(rect);
+      rect.addEventListener("mousemove", evt => {
+        const pt = svg.getBoundingClientRect();
+        const vb = svg.viewBox.baseVal;
+        const py = (evt.clientY - pt.top) / pt.height * vb.height;
+        const fj = (py - box.y0) / (box.y1 - box.y0);
+        const j = Math.max(0, Math.min(NP - 1, Math.round(fj * (NP - 1))));
+        let html = `<div style="font-weight:700;margin-bottom:4px">${pn.title} · ${fmt(PGRID[j] / 100, 0)} hPa</div>`;
+        pn.series.forEach(s => {
+          html += `<div class="row"><span><i style="background:${s.color}"></i>${s.name}</span>` +
+                  `<b>${fmt(s.values[j] / sc.scale, 2)}</b></div>`;
+        });
+        html += `<div style="margin-top:4px;color:#666">${pn.rawUnits ? pn.unit : (sc.pre + pn.unit).trim()}</div>`;
+        showTip(evt, html);
+      });
+      rect.addEventListener("mouseleave", hideTip);
+    });
+  }
+
+  /* ---------- tabla de valores ---------- */
+  function buildTable(d, xs, xs_km, k, jStar, pStar) {
+    const N = 13;
+    const rows = [];
+    for (let n = 0; n < N; n++) {
+      const i = Math.round(n * (NX - 1) / (N - 1));
+      const X = k * xs[i];
+      const phi = d.PhiC[jStar] * Math.cos(X) + d.PhiS[jStar] * Math.sin(X);
+      const zet = d.ZetC[jStar] * Math.cos(X) + d.ZetS[jStar] * Math.sin(X);
+      const B   = d.BC[jStar] * Math.cos(X) + d.BS[jStar] * Math.sin(X);
+      const C   = d.CC[jStar] * Math.cos(X) + d.CS[jStar] * Math.sin(X);
+      const chi = d.chiT.c[jStar] * Math.cos(X) + d.chiT.s[jStar] * Math.sin(X);
+      rows.push([xs_km[i], phi, zet * 1e5, B * 1e14, C * 1e14, (B + C) * 1e14, chi / G * SEC12H]);
+    }
+    const head = ["x [km]", "Φ′ [m²/s²]", "ζ_g [10⁻⁵ s⁻¹]", "B [10⁻¹⁴ s⁻³]",
+                  "C [10⁻¹⁴ s⁻³]", "B+C [10⁻¹⁴ s⁻³]", "∂Z/∂t [m/12h]"];
+    let html = `<p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 8px">Valores en p* = ${fmt(pStar, 0)} hPa.</p>`;
+    html += "<table class='data'><thead><tr>" + head.map(h => `<th>${h}</th>`).join("") + "</tr></thead><tbody>";
+    rows.forEach(r => {
+      html += "<tr>" + r.map((v, n) => `<td>${fmt(v, n === 0 ? 0 : 2)}</td>`).join("") + "</tr>";
+    });
+    html += "</tbody></table>";
+    document.getElementById("tableHost").innerHTML = html;
+  }
+
+  /* ==================================================================
+     7. Eventos
+     ================================================================== */
+  IDS.forEach(id => els[id].addEventListener("input", scheduleRender));
+  document.querySelectorAll('input[name="chimode"], input[name="bcbot"], input[name="xmode"]').forEach(r =>
+    r.addEventListener("change", scheduleRender));
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    loadDefaults(); markPreset("baroclinic"); render();
+  });
+  document.querySelectorAll("button[data-preset]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      loadDefaults();
+      applyParams(PRESETS[btn.dataset.preset]);
+      markPreset(btn.dataset.preset);
+      render();
+    });
+  });
+  function markPreset(name) {
+    document.querySelectorAll("button[data-preset]").forEach(b =>
+      b.classList.toggle("active", b.dataset.preset === name));
+  }
+
+  loadDefaults();
+  markPreset("baroclinic");
+  render();
+})();
+</script>
+</body>
+</html>

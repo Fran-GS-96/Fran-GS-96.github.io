@@ -1972,3 +1972,21 @@ table.info-table--year-first {
 		display: inline;
 	}
 }
+
+
+// Links inside the info tables (e.g. the Materials column). Green rather than
+// the global navy, so they read as links against the navy-ish table text.
+table.info-table td a {
+	color: $brand-color-2;
+	border-bottom: 1px solid rgba(45, 106, 79, .35);
+	@include transition(.3s);
+	&:hover, &:focus {
+		color: $brand-color-4;
+		border-bottom-color: $brand-color-4;
+		text-decoration: none;
+	}
+}
+// empty-cell placeholder
+table.info-table td.none {
+	color: rgba(0,0,0,.3);
+}

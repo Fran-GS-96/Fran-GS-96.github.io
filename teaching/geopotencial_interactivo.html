@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geopotencial de onda estacionaria — interactivo</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #ffffff; /* recuadros: blanco */
+    --page-plane:     #f2f2f2; /* fondo de página: gris claro */
+    --text-primary:   #000000;
+    --text-secondary: #000000;
+    --text-muted:     #000000;
+    --gridline:       #e2e2e2;
+    --baseline:       #b5b5b5;
+    --border:         rgba(0,0,0,0.15);
+    --series-1: #1d4ed8; /* u_g    - azul   */
+    --series-2: #dc2626; /* v_g    - rojo   */
+    --series-3: #16a34a; /* zeta   - verde  */
+    --series-7: #ea580c; /* barras - naranjo */
+    --div-low:  #2563eb; /* contornos: bajo Φ  (azul) */
+    --div-mid:  #f0f0f0; /* contornos: medio Φ (gris claro) */
+    --div-high: #dc2626; /* contornos: alto Φ  (rojo) */
+  }
+  /* Tema forzado siempre claro: recuadros blancos/gris claro y texto negro,
+     independiente de las preferencias de color del sistema. */
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--page-plane);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+  }
+  .viz-root { max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 18px; line-height: 1.5; max-width: 900px; }
+  .subtitle code { background: var(--gridline); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+
+  .toolbar { display:flex; justify-content: flex-end; align-items:center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;}
+  button.reset-btn {
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+    padding: 7px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+  }
+  button.reset-btn:hover { background: var(--gridline); }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr) 250px;
+    gap: 20px;
+    align-items: start;
+  }
+  .side-panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .side-panel .group h2 {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-secondary); margin: 0 0 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--gridline);
+  }
+  .side-panel .group { display: flex; flex-direction: column; gap: 14px; }
+
+  .center-col { min-width: 0; }
+
+  .ctrl { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl label {
+    font-size: 0.8rem; color: var(--text-secondary);
+    display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  }
+  .ctrl label .val { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .ctrl input[type="range"] {
+    width: 100%; accent-color: var(--series-1); cursor: pointer;
+  }
+  .ctrl .hint { font-size: 0.72rem; color: var(--text-muted); }
+  .range-pair { display: flex; gap: 10px; }
+  .range-pair .ctrl { flex: 1; }
+
+  .info-strip {
+    display: flex; flex-wrap: wrap; gap: 12px 18px;
+    font-size: 0.82rem; color: var(--text-secondary);
+    margin-bottom: 18px; padding: 12px 16px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .info-strip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .warn { color: #d03b3b; font-weight: 600; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 84px;
+    column-gap: 10px;
+    row-gap: 26px;
+  }
+
+  @media (max-width: 1050px) {
+    .layout-grid { grid-template-columns: 1fr; }
+    .side-panel { position: static; }
+  }
+  .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px 10px; grid-column: 1;
+  }
+  .chart-card.contour-card { grid-column: 1; }
+  .colorbar-card {
+    grid-column: 2; display: flex; align-items: stretch; justify-content: center;
+    padding-top: 40px; padding-bottom: 34px;
+  }
+  .chart-title { font-size: 0.92rem; font-weight: 600; margin: 0 0 2px; }
+  .chart-note { font-size: 0.78rem; color: var(--text-muted); margin: 0 0 8px; }
+  svg { display: block; width: 100%; height: auto; }
+  .axis-line { stroke: var(--baseline); stroke-width: 1; }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .tick-label { fill: var(--text-muted); font-size: 10px; }
+  .axis-label { fill: var(--text-secondary); font-size: 11px; }
+  .contour-path { fill: none; stroke-width: 1.8; }
+  .contour-label { font-size: 9px; fill: var(--text-secondary); }
+  .zero-line { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 2 3; }
+  .bar-rect { fill: var(--series-7); }
+  .cb-tick-label { fill: var(--text-muted); font-size: 10px; }
+
+  footer { text-align:center; color: var(--text-muted); font-size: 0.78rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+
+  <h1>Geopotencial de onda estacionaria</h1>
+  <p class="subtitle">
+    <code>&Phi;(x,y) = &Phi;&#8320; &minus; f&#8320;&sdot;U&sdot;y + f&#8320;&sdot;A&sdot;sin(kx)</code>
+    &nbsp;&mdash;&nbsp; viento geostrófico
+    <code>u_g = &minus;(1/f&#8320;)&part;&Phi;/&part;y = U</code>,
+    <code>v_g = (1/f&#8320;)&part;&Phi;/&part;x = A&sdot;k&sdot;cos(kx)</code>
+    y vorticidad relativa <code>&zeta; = &part;v_g/&part;x &minus; &part;u_g/&part;y = &minus;A&sdot;k&sup2;&sdot;sin(kx)</code>.
+    Mueve los controles para explorar cómo cambian los campos.
+  </p>
+
+  <div class="toolbar">
+    <button class="reset-btn" id="resetBtn">Restaurar valores por defecto</button>
+  </div>
+
+  <div class="layout-grid">
+
+    <!-- ===== Panel izquierdo: constantes del geopotencial ===== -->
+    <aside class="side-panel">
+      <div class="group">
+        <h2>Constantes del geopotencial</h2>
+
+        <div class="ctrl">
+          <label>&Phi;&#8320; &mdash; geopotencial de referencia <span class="val" id="v_phi0"></span></label>
+          <input type="range" id="phi0" min="0" max="100000" step="1000">
+        </div>
+
+        <div class="ctrl">
+          <label>U &mdash; viento zonal de fondo [m/s] <span class="val" id="v_U"></span></label>
+          <input type="range" id="U" min="1" max="50" step="0.5">
+        </div>
+
+        <div class="ctrl">
+          <label>A &mdash; amplitud de la onda [&times;10&#8310; m&sup2;/s&sup2;] <span class="val" id="v_A"></span></label>
+          <input type="range" id="A" min="0" max="15" step="0.25">
+        </div>
+
+        <div class="ctrl">
+          <label>L &mdash; longitud de onda [km] <span class="val" id="v_L"></span></label>
+          <input type="range" id="L" min="1500" max="8000" step="100">
+        </div>
+
+        <div class="ctrl">
+          <label>f&#8320; &mdash; parámetro de Coriolis [&times;10&#8315;&#8308; s&#8315;&sup1;] <span class="val" id="v_f0"></span></label>
+          <input type="range" id="f0" min="-2.0" max="2.0" step="0.05">
+          <span class="hint">Negativo = hemisferio sur</span>
+        </div>
+
+        <div class="ctrl">
+          <label>g &mdash; gravedad [m/s&sup2;] <span class="val" id="v_g"></span></label>
+          <input type="range" id="g" min="9.5" max="10.0" step="0.01">
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Columna central: gráficos ===== -->
+    <main class="center-col">
+      <div class="info-strip" id="infoStrip"></div>
+
+      <div class="charts-grid" id="chartsGrid">
+        <!-- 1) Geopotencial: contornos -->
+        <div class="chart-card contour-card">
+          <p class="chart-title">Geopotencial &Phi;(x,y) — contornos</p>
+          <p class="chart-note">Cada línea es Φ = cte. Su ondulación en x tiene amplitud A/U.</p>
+          <svg id="svgContour" viewBox="0 0 800 380"></svg>
+        </div>
+        <div class="colorbar-card">
+          <svg id="svgColorbar" viewBox="0 0 84 340"></svg>
+        </div>
+
+        <!-- 2) u_g -->
+        <div class="chart-card">
+          <p class="chart-title">Viento geostrófico u<sub>g</sub></p>
+          <p class="chart-note">Constante = U, no depende de x ni de y.</p>
+          <svg id="svgU" viewBox="0 0 800 220"></svg>
+        </div>
+
+        <!-- 3) v_g -->
+        <div class="chart-card">
+          <p class="chart-title">Viento geostrófico v<sub>g</sub>(x)</p>
+          <p class="chart-note">v_g = A·k·cos(kx)</p>
+          <svg id="svgV" viewBox="0 0 800 220"></svg>
+        </div>
+
+        <!-- 4) vorticidad -->
+        <div class="chart-card">
+          <p class="chart-title">Vorticidad relativa geostrófica &zeta;(x)</p>
+          <p class="chart-note">&zeta; = &minus;A·k²·sin(kx)</p>
+          <svg id="svgZeta" viewBox="0 0 800 220"></svg>
+        </div>
+
+        <!-- 5) barras Z -->
+        <div class="chart-card">
+          <p class="chart-title" id="barTitle">Altura geopotencial Z = Φ/g</p>
+          <p class="chart-note" id="barNote"></p>
+          <svg id="svgBar" viewBox="0 0 800 260"></svg>
+        </div>
+      </div>
+
+      <footer>Dinámica de la Atmósfera · geopotencial de onda estacionaria · ajusta los parámetros a los costados</footer>
+    </main>
+
+    <!-- ===== Panel derecho: dominio y muestreo ===== -->
+    <aside class="side-panel">
+      <div class="group">
+        <h2>Dominio y visualización</h2>
+
+        <div class="range-pair">
+          <div class="ctrl">
+            <label>x mín [km] <span class="val" id="v_xmin"></span></label>
+            <input type="range" id="xmin" min="-20000" max="19000" step="500">
+          </div>
+          <div class="ctrl">
+            <label>x máx [km] <span class="val" id="v_xmax"></span></label>
+            <input type="range" id="xmax" min="-19000" max="20000" step="500">
+          </div>
+        </div>
+
+        <div class="range-pair">
+          <div class="ctrl">
+            <label>y mín [km] <span class="val" id="v_ymin"></span></label>
+            <input type="range" id="ymin" min="-10000" max="9500" step="250">
+          </div>
+          <div class="ctrl">
+            <label>y máx [km] <span class="val" id="v_ymax"></span></label>
+            <input type="range" id="ymax" min="-9500" max="10000" step="250">
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <label>"Latitud" y del corte de barras [km] <span class="val" id="v_ybar"></span></label>
+          <input type="range" id="ybar" min="-10000" max="10000" step="100">
+        </div>
+
+        <div class="ctrl">
+          <label>Número de barras <span class="val" id="v_nbars"></span></label>
+          <input type="range" id="nbars" min="6" max="50" step="1">
+        </div>
+
+        <div class="ctrl">
+          <label>Número de contornos <span class="val" id="v_nlevels"></span></label>
+          <input type="range" id="nlevels" min="6" max="30" step="1">
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- default parameters (mismos que la version de referencia) ----------
+  const DEFAULTS = {
+    phi0: 50000, U: 15, A: 10,      // A en unidades de 1e6 m^2/s^2 -> real A = A*1e6
+    L: 3000, f0: 1.0,               // f0 en unidades de 1e-4 -> real f0 = f0*1e-4
+    g: 9.81,
+    xmin: 0, xmax: 8000,
+    ymin: -2000, ymax: 2000,
+    ybar: 1000, nbars: 25, nlevels: 18
+  };
+
+  // ---------- ejes fijos para los 4 gráficos de línea/barras -----------------
+  // Se calculan una sola vez, a partir de los rangos máximos de los sliders
+  // fisicos (A, L->k, U, f0, g), para que SOLO las curvas/barras cambien de
+  // forma al mover los parámetros — el eje y ya no se reescala en cada cambio.
+  const A_MAX = 15e6, L_MIN = 1500e3, U_MAX = 50, F0_MAX = 2e-4, G_MIN = 9.5;
+  const K_MAX = 2 * Math.PI / L_MIN;
+  const AXIS_U = [0, Math.ceil(U_MAX * 1.1)];
+  const VG_WORST = A_MAX * K_MAX;
+  const AXIS_VG = [-VG_WORST * 1.12, VG_WORST * 1.12];
+  const ZETA_WORST = A_MAX * K_MAX * K_MAX;
+  const AXIS_ZETA = [-ZETA_WORST * 1.12, ZETA_WORST * 1.12];
+  const Z_OSC_WORST = (F0_MAX * A_MAX) / G_MIN;      // amplitud maxima de Z respecto a su media
+  const Z_SPAN = 2 * Z_OSC_WORST * 1.25;              // alto total fijo del eje (m), centrado en la media
+
+  const ids = ["phi0","U","A","L","f0","g","xmin","xmax","ymin","ymax","ybar","nbars","nlevels"];
+  const els = {};
+  ids.forEach(id => els[id] = document.getElementById(id));
+
+  function loadDefaults() {
+    ids.forEach(id => els[id].value = DEFAULTS[id]);
+  }
+  loadDefaults();
+
+  // ---------- palette: diverging blue -> gray -> red for the contour levels ----------
+  function isDark() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(name).trim();
+  }
+  function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgbToHex([r, g, b]) {
+    return "#" + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+  }
+  function lerpRgb(c0, c1, t) {
+    return [c0[0] + (c1[0] - c0[0]) * t, c0[1] + (c1[1] - c0[1]) * t, c0[2] + (c1[2] - c0[2]) * t];
+  }
+  function seqColor(t) { // t in [0,1]: 0 = bajo Φ (azul), 0.5 = medio (gris), 1 = alto Φ (rojo)
+    const low = hexToRgb(cssVar("--div-low"));
+    const mid = hexToRgb(cssVar("--div-mid"));
+    const high = hexToRgb(cssVar("--div-high"));
+    if (t <= 0.5) return rgbToHex(lerpRgb(low, mid, t / 0.5));
+    return rgbToHex(lerpRgb(mid, high, (t - 0.5) / 0.5));
+  }
+
+  // ---------- small SVG helpers ----------
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function clearSvg(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  function linScale(domain, range) {
+    const [d0, d1] = domain, [r0, r1] = range;
+    const m = (r1 - r0) / (d1 - d0 || 1e-30);
+    return v => r0 + (v - d0) * m;
+  }
+
+  function niceTicks(min, max, count) {
+    if (max <= min) max = min + 1;
+    const span = max - min;
+    const step0 = span / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const norm = step0 / mag;
+    let step;
+    if (norm < 1.5) step = 1 * mag;
+    else if (norm < 3) step = 2 * mag;
+    else if (norm < 7) step = 5 * mag;
+    else step = 10 * mag;
+    const start = Math.ceil(min / step) * step;
+    const ticks = [];
+    for (let v = start; v <= max + 1e-9; v += step) ticks.push(Math.round(v * 1e6) / 1e6);
+    return ticks;
+  }
+
+  function fmt(v) {
+    if (v === 0) return "0";
+    const av = Math.abs(v);
+    if (av >= 1000) return v.toLocaleString("es-CL", {maximumFractionDigits: 0});
+    if (av >= 1) return v.toLocaleString("es-CL", {maximumFractionDigits: 1});
+    if (av < 1e-3) return v.toExponential(1).replace("e", "e");
+    return v.toPrecision(2);
+  }
+
+  // Draws a standard cartesian frame (axes, gridlines, ticks) into an svg with viewBox WxH.
+  // Returns {xScale, yScale, plot:{x0,x1,y0,y1}}
+  function drawFrame(svg, W, H, xDomain, yDomain, xLabel, yLabel, margins) {
+    clearSvg(svg);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const m = margins || {top: 10, right: 14, bottom: 34, left: 52};
+    const x0 = m.left, x1 = W - m.right, y0 = m.top, y1 = H - m.bottom;
+    const xScale = linScale(xDomain, [x0, x1]);
+    const yScale = linScale(yDomain, [y1, y0]); // invert y
+
+    const gGrid = svgEl("g", {});
+    svg.appendChild(gGrid);
+
+    const xt = niceTicks(xDomain[0], xDomain[1], 7);
+    const yt = niceTicks(yDomain[0], yDomain[1], 5);
+
+    xt.forEach(t => {
+      const px = xScale(t);
+      gGrid.appendChild(svgEl("line", {x1: px, x2: px, y1: y0, y2: y1, class: "grid-line"}));
+      const lbl = svgEl("text", {x: px, y: y1 + 16, class: "tick-label", "text-anchor": "middle"});
+      lbl.textContent = fmt(t);
+      svg.appendChild(lbl);
+    });
+    yt.forEach(t => {
+      const py = yScale(t);
+      gGrid.appendChild(svgEl("line", {x1: x0, x2: x1, y1: py, y2: py, class: "grid-line"}));
+      const lbl = svgEl("text", {x: x0 - 8, y: py + 3, class: "tick-label", "text-anchor": "end"});
+      lbl.textContent = fmt(t);
+      svg.appendChild(lbl);
+    });
+
+    svg.appendChild(svgEl("line", {x1: x0, x2: x1, y1: y1, y2: y1, class: "axis-line"}));
+    svg.appendChild(svgEl("line", {x1: x0, x2: x0, y1: y0, y2: y1, class: "axis-line"}));
+
+    if (xLabel) {
+      const t = svgEl("text", {x: (x0 + x1) / 2, y: H - 4, class: "axis-label", "text-anchor": "middle"});
+      t.textContent = xLabel;
+      svg.appendChild(t);
+    }
+    if (yLabel) {
+      const t = svgEl("text", {x: 12, y: (y0 + y1) / 2, class: "axis-label", "text-anchor": "middle",
+                                transform: `rotate(-90, 12, ${(y0 + y1) / 2})`});
+      t.textContent = yLabel;
+      svg.appendChild(t);
+    }
+
+    return {xScale, yScale, plot: {x0, x1, y0, y1}};
+  }
+
+  function pathFromPoints(xScale, yScale, xs, ys) {
+    let d = "";
+    for (let i = 0; i < xs.length; i++) {
+      const px = xScale(xs[i]), py = yScale(ys[i]);
+      d += (i === 0 ? "M" : "L") + px.toFixed(2) + "," + py.toFixed(2) + " ";
+    }
+    return d.trim();
+  }
+
+  // ---------- read params ----------
+  function readParams() {
+    const p = {};
+    ids.forEach(id => p[id] = parseFloat(els[id].value));
+    // keep xmin<xmax, ymin<ymax with a minimum gap
+    if (p.xmax <= p.xmin) p.xmax = p.xmin + 500;
+    if (p.ymax <= p.ymin) p.ymax = p.ymin + 250;
+    p.ybar = Math.min(Math.max(p.ybar, p.ymin), p.ymax);
+    return p;
+  }
+
+  function updateLabels(p) {
+    document.getElementById("v_phi0").textContent = fmt(p.phi0) + " m²/s²";
+    document.getElementById("v_U").textContent = p.U + " m/s";
+    document.getElementById("v_A").textContent = p.A + " ×10⁶ m²/s²";
+    document.getElementById("v_L").textContent = p.L + " km";
+    document.getElementById("v_f0").textContent = p.f0.toFixed(2) + " ×10⁻⁴ s⁻¹";
+    document.getElementById("v_g").textContent = p.g.toFixed(2) + " m/s²";
+    document.getElementById("v_xmin").textContent = p.xmin;
+    document.getElementById("v_xmax").textContent = p.xmax;
+    document.getElementById("v_ymin").textContent = p.ymin;
+    document.getElementById("v_ymax").textContent = p.ymax;
+    document.getElementById("v_ybar").textContent = p.ybar;
+    document.getElementById("v_nbars").textContent = p.nbars;
+    document.getElementById("v_nlevels").textContent = p.nlevels;
+  }
+
+  // ---------- physics ----------
+  function computeDerived(p) {
+    const A = p.A * 1e6;         // m^2/s^2
+    // f0 puede ser negativo (hemisferio sur); se evita el valor exacto 0
+    // porque aparece dividiendo en el cálculo de los contornos.
+    let f0raw = p.f0;
+    if (Math.abs(f0raw) < 0.05) f0raw = f0raw < 0 ? -0.05 : 0.05;
+    const f0 = f0raw * 1e-4;     // 1/s
+    const L = p.L * 1000;        // m
+    const k = 2 * Math.PI / L;   // 1/m
+    const U = p.U;
+    const g = p.g;
+    const phi0 = p.phi0;
+    return {A, f0, k, U, g, phi0};
+  }
+
+  function render() {
+    const p = readParams();
+    updateLabels(p);
+    const d = computeDerived(p);
+    const {A, f0, k, U, g, phi0} = d;
+
+    const N = 400;
+    const xs_km = [];
+    for (let i = 0; i <= N; i++) xs_km.push(p.xmin + (p.xmax - p.xmin) * i / N);
+    const xs_m = xs_km.map(v => v * 1000);
+
+    // ---- derived field curves (depend only on x) ----
+    const v_g = xs_m.map(xm => A * k * Math.cos(k * xm));
+    const zeta = xs_m.map(xm => -A * k * k * Math.sin(k * xm));
+
+    // ---- info strip ----
+    const waveAmp_km = (A / U) / 1000; // amplitude of contour undulation, in km
+    const yDomainSpan_km = p.ymax - p.ymin;
+    const ratioPct = (waveAmp_km / yDomainSpan_km) * 100;
+    const info = document.getElementById("infoStrip");
+    info.innerHTML =
+      `k = <b>${(k * 1e6).toFixed(4)}</b> ×10⁻⁶ m⁻¹ &nbsp;·&nbsp; ` +
+      `amplitud de ondulación de los contornos A/U = <b>${waveAmp_km.toFixed(0)} km</b> ` +
+      `(${ratioPct.toFixed(0)}% del ancho del dominio en y)` +
+      (ratioPct < 5 ? ` <span class="warn">— muy chica, sube A o baja U para verla</span>` : "");
+
+    // ================= 1) Contour plot =================
+    const svgC = document.getElementById("svgContour");
+    const Wc = 800, Hc = 380;
+    const frameC = drawFrame(svgC, Wc, Hc, [p.xmin, p.xmax], [p.ymin, p.ymax], "x [km]", "y [km]");
+
+    // Phi range over the domain, sampled at x extremes and y extremes
+    let phiMin = Infinity, phiMax = -Infinity;
+    xs_m.forEach(xm => {
+      const osc = f0 * A * Math.sin(k * xm);
+      const v1 = phi0 - f0 * U * (p.ymin * 1000) + osc;
+      const v2 = phi0 - f0 * U * (p.ymax * 1000) + osc;
+      phiMin = Math.min(phiMin, v1, v2);
+      phiMax = Math.max(phiMax, v1, v2);
+    });
+    if (phiMax <= phiMin) phiMax = phiMin + 1;
+
+    // clip path so wavy lines don't spill outside the axes box
+    const clipId = "clipContour";
+    let defs = svgC.querySelector("defs");
+    if (!defs) { defs = svgEl("defs", {}); svgC.insertBefore(defs, svgC.firstChild); }
+    defs.innerHTML = "";
+    const clipRect = svgEl("clipPath", {id: clipId});
+    clipRect.appendChild(svgEl("rect", {
+      x: frameC.plot.x0, y: frameC.plot.y0,
+      width: frameC.plot.x1 - frameC.plot.x0, height: frameC.plot.y1 - frameC.plot.y0
+    }));
+    defs.appendChild(clipRect);
+
+    const gLines = svgEl("g", {"clip-path": `url(#${clipId})`});
+    svgC.appendChild(gLines);
+
+    const nLevels = p.nlevels;
+    let lastLabelPy = -1e9;
+    for (let li = 0; li < nLevels; li++) {
+      const t = nLevels === 1 ? 0.5 : li / (nLevels - 1);
+      const C = phiMin + t * (phiMax - phiMin);
+      const ys_km = xs_m.map(xm => {
+        const yM = (phi0 - C + f0 * A * Math.sin(k * xm)) / (f0 * U);
+        return yM / 1000;
+      });
+      const dPath = pathFromPoints(frameC.xScale, frameC.yScale, xs_km, ys_km);
+      gLines.appendChild(svgEl("path", {d: dPath, class: "contour-path", stroke: seqColor(t)}));
+
+      // label: place at the x where the curve is closest to the top of the visible window,
+      // fallback to leftmost visible point
+      let labelIdx = -1;
+      for (let i = 0; i < ys_km.length; i++) {
+        if (ys_km[i] >= p.ymin && ys_km[i] <= p.ymax) { labelIdx = i; break; }
+      }
+      if (labelIdx >= 0) {
+        const px = frameC.xScale(xs_km[labelIdx]);
+        const py = frameC.yScale(ys_km[labelIdx]);
+        if (Math.abs(py - lastLabelPy) < 13) continue;
+        lastLabelPy = py;
+        const txt = svgEl("text", {x: px + 3, y: py - 3, class: "contour-label"});
+        txt.textContent = fmt(C);
+        gLines.appendChild(txt);
+      }
+    }
+
+    // ================= colorbar =================
+    const svgCb = document.getElementById("svgColorbar");
+    clearSvg(svgCb);
+    const Wcb = 84, Hcb = 340;
+    svgCb.setAttribute("viewBox", `0 0 ${Wcb} ${Hcb}`);
+    const barTop = 6, barBottom = Hcb - 6, barW = 18, barX = 6;
+    const nSw = 40;
+    for (let i = 0; i < nSw; i++) {
+      const t0 = i / nSw, t1 = (i + 1) / nSw;
+      const yTop = barTop + (1 - t1) * (barBottom - barTop);
+      const yBot = barTop + (1 - t0) * (barBottom - barTop);
+      svgCb.appendChild(svgEl("rect", {
+        x: barX, y: yTop, width: barW, height: (yBot - yTop) + 0.5,
+        fill: seqColor((t0 + t1) / 2)
+      }));
+    }
+    svgCb.appendChild(svgEl("rect", {x: barX, y: barTop, width: barW, height: barBottom - barTop,
+                                      fill: "none", stroke: "var(--border)"}));
+    const cbTicks = 5;
+    for (let i = 0; i <= cbTicks; i++) {
+      const t = i / cbTicks;
+      const val = phiMin + t * (phiMax - phiMin);
+      const py = barTop + (1 - t) * (barBottom - barTop);
+      svgCb.appendChild(svgEl("line", {x1: barX + barW, x2: barX + barW + 4, y1: py, y2: py, class: "axis-line"}));
+      const lbl = svgEl("text", {x: barX + barW + 7, y: py + 3, class: "cb-tick-label"});
+      lbl.textContent = fmt(val);
+      svgCb.appendChild(lbl);
+    }
+    const cbTitle = svgEl("text", {x: Wcb / 2, y: 16, class: "axis-label", "text-anchor": "middle"});
+    cbTitle.textContent = "Φ";
+    svgCb.insertBefore(cbTitle, svgCb.firstChild);
+
+    // ================= 2) u_g =================
+    // Eje y FIJO: cubre todo el rango posible de U (slider), así que al
+    // mover U solo cambia la altura de la línea, nunca la escala del eje.
+    const svgU = document.getElementById("svgU");
+    const frameU = drawFrame(svgU, 800, 220, [p.xmin, p.xmax], AXIS_U, "x [km]", "u_g [m/s]");
+    const uLine = pathFromPoints(frameU.xScale, frameU.yScale, [p.xmin, p.xmax], [U, U]);
+    svgU.appendChild(svgEl("path", {d: uLine, class: "contour-path", stroke: "var(--series-1)"}));
+
+    // ================= 3) v_g ================= (eje y fijo, ver AXIS_VG)
+    const svgV = document.getElementById("svgV");
+    const frameV = drawFrame(svgV, 800, 220, [p.xmin, p.xmax], AXIS_VG, "x [km]", "v_g [m/s]");
+    svgV.appendChild(svgEl("line", {x1: frameV.plot.x0, x2: frameV.plot.x1,
+                                     y1: frameV.yScale(0), y2: frameV.yScale(0), class: "zero-line"}));
+    svgV.appendChild(svgEl("path", {d: pathFromPoints(frameV.xScale, frameV.yScale, xs_km, v_g),
+                                     class: "contour-path", stroke: "var(--series-2)"}));
+
+    // ================= 4) zeta ================= (eje y fijo, ver AXIS_ZETA)
+    const svgZ = document.getElementById("svgZeta");
+    const frameZ = drawFrame(svgZ, 800, 220, [p.xmin, p.xmax], AXIS_ZETA, "x [km]", "ζ [1/s]");
+    svgZ.appendChild(svgEl("line", {x1: frameZ.plot.x0, x2: frameZ.plot.x1,
+                                     y1: frameZ.yScale(0), y2: frameZ.yScale(0), class: "zero-line"}));
+    svgZ.appendChild(svgEl("path", {d: pathFromPoints(frameZ.xScale, frameZ.yScale, xs_km, zeta),
+                                     class: "contour-path", stroke: "var(--series-3)"}));
+
+    // ================= 5) bar chart (altura geopotencial en y = ybar) =================
+    // Eje y de ALTURA FIJA (Z_SPAN, la misma escala siempre) pero centrado
+    // en el promedio actual de Z, para no perder las barras cuando cambian
+    // Φ0 o la latitud del corte (esos solo desplazan el nivel de base).
+    const nb = Math.round(p.nbars);
+    const xb_km = [];
+    for (let i = 0; i < nb; i++) xb_km.push(p.xmin + (p.xmax - p.xmin) * (i + 0.5) / nb);
+    const Zb = xb_km.map(xkm => {
+      const xm = xkm * 1000, ym = p.ybar * 1000;
+      const phi = phi0 - f0 * U * ym + f0 * A * Math.sin(k * xm);
+      return phi / g;
+    });
+    const zMinB = Math.min(...Zb), zMaxB = Math.max(...Zb);
+    const range = zMaxB - zMinB;
+    const zMean = (zMinB + zMaxB) / 2;
+    const svgB = document.getElementById("svgBar");
+    const frameB = drawFrame(svgB, 800, 260, [p.xmin, p.xmax],
+                              [zMean - Z_SPAN / 2, zMean + Z_SPAN / 2], "x [km]", "Z [m]");
+    const barWidthPx = Math.max(2, (frameB.plot.x1 - frameB.plot.x0) / nb * 0.78);
+    const yBase = frameB.yScale(zMean - Z_SPAN / 2);
+    xb_km.forEach((xkm, i) => {
+      const px = frameB.xScale(xkm);
+      const py = frameB.yScale(Zb[i]);
+      svgB.appendChild(svgEl("rect", {
+        x: px - barWidthPx / 2, y: py, width: barWidthPx, height: Math.max(0, yBase - py),
+        class: "bar-rect", rx: 2
+      }));
+    });
+    document.getElementById("barTitle").textContent =
+      `Altura geopotencial Z = Φ/g en y = ${fmt(p.ybar)} km`;
+    document.getElementById("barNote").textContent =
+      `Rango entre barras: ${fmt(range)} m` + (range < 5 ? " — muy chico, sube A para que se note" : "");
+  }
+
+  ids.forEach(id => els[id].addEventListener("input", render));
+  document.getElementById("resetBtn").addEventListener("click", () => { loadDefaults(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vorticidad potencial cuasi-geostrófica — interactivo (Holton §6.3.2)</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #ffffff;
+    --surface-2:      #fafaf9;
+    --page-plane:     #f2f2f2;
+    --text-primary:   #000000;
+    --text-secondary: #3a3a3a;
+    --text-muted:     #5a5a5a;
+    --gridline:       #e2e2e2;
+    --baseline:       #b5b5b5;
+    --border:         rgba(0,0,0,0.15);
+    --series-1: #2a78d6; /* azul    */
+    --series-2: #eb6834; /* naranjo */
+    --series-3: #1baf7a; /* aqua    */
+    --series-4: #4a3aa7; /* violeta */
+    --div-low:  #2563eb;
+    --div-mid:  #f0efec;
+    --div-high: #dc2626;
+    --accent-warn: #b45309;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--page-plane);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+  }
+  .viz-root { max-width: 1460px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  h1 { font-size: 1.45rem; margin: 0 0 6px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 16px; line-height: 1.55; max-width: 1000px; }
+  code, .mono { font-family: "Cambria Math", Cambria, Georgia, serif; }
+
+  .eqbox {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 16px; overflow-x: auto;
+  }
+  .eq { font-family: "Cambria Math", Cambria, Georgia, serif; font-size: 1.15rem;
+        display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
+  .eq .grp { display: inline-flex; flex-direction: column; align-items: center; }
+  .eq .grp .under { border-top: 2px solid currentColor; margin-top: 3px; width: 100%; }
+  .eq .grp .tag { font-size: 0.72rem; font-family: system-ui, sans-serif; letter-spacing: .04em;
+                  margin-top: 3px; font-weight: 700; }
+  .tagZ { color: var(--series-1); }
+  .tagF { color: var(--series-3); }
+  .tagS { color: var(--series-2); }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle;
+          margin: 0 3px; font-size: 0.82em; line-height: 1.15; }
+  .frac .num { border-bottom: 1.2px solid currentColor; padding: 0 3px; }
+  .frac .den { padding: 0 3px; }
+
+  details.deriv { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+                  padding: 0 20px; margin-bottom: 18px; }
+  details.deriv > summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 0.95rem; }
+  details.deriv .body { padding-bottom: 16px; font-size: 0.9rem; line-height: 1.65; color: var(--text-secondary); }
+  details.deriv .body ol { padding-left: 20px; }
+  details.deriv .body li { margin-bottom: 12px; }
+  details.deriv .eq { display: block; font-size: 1.02rem; margin: 9px 0; white-space: normal; }
+  .note { background: var(--surface-2); border-left: 3px solid var(--series-4);
+          padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 12px 0; }
+  .note.warn { border-left-color: var(--accent-warn); }
+
+  .toolbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;}
+  .presets { display:flex; gap:8px; flex-wrap: wrap; }
+  button.btn {
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+    padding: 7px 13px; border-radius: 8px; font-size: 0.82rem; cursor: pointer;
+  }
+  button.btn:hover { background: var(--gridline); }
+  button.btn.active { background: var(--series-4); color: #fff; border-color: var(--series-4); }
+
+  .layout-grid { display: grid; grid-template-columns: 245px minmax(0, 1fr) 252px; gap: 18px; align-items: start; }
+  .side-panel {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 15px 16px; position: sticky; top: 12px; display: flex; flex-direction: column; gap: 15px;
+    max-height: calc(100vh - 24px); overflow-y: auto;
+  }
+  .side-panel .group h2 {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-secondary); margin: 0 0 11px; padding-bottom: 7px; border-bottom: 1px solid var(--gridline);
+  }
+  .side-panel .group.hot h2 { color: var(--series-2); border-bottom-color: var(--series-2); }
+  .side-panel .group { display: flex; flex-direction: column; gap: 13px; }
+  .center-col { min-width: 0; }
+
+  .ctrl { display: flex; flex-direction: column; gap: 3px; }
+  .ctrl label { font-size: 0.78rem; color: var(--text-secondary); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .ctrl label .val { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .ctrl input[type="range"] { width: 100%; accent-color: var(--series-1); cursor: pointer; }
+  .ctrl.hot input[type="range"] { accent-color: var(--series-2); }
+  .ctrl .hint, .side-panel .hint { font-size: 0.7rem; color: var(--text-muted); line-height: 1.35; display:block; }
+  .radio-row { display:flex; flex-direction: column; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
+  .radio-row label { display:flex; align-items:flex-start; justify-content: flex-start; gap: 6px; cursor: pointer; }
+
+  /* pad de flechas */
+  .padwrap { display:grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .padwrap button {
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-primary);
+    padding: 9px 0; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 700;
+  }
+  .padwrap button:hover { background: var(--gridline); }
+  .padwrap .spacer { visibility: hidden; }
+  .padwrap button.home { font-size: 0.72rem; font-weight: 600; }
+
+  .info-strip {
+    display: flex; flex-wrap: wrap; gap: 10px 20px;
+    font-size: 0.82rem; color: var(--text-secondary);
+    margin-bottom: 16px; padding: 12px 16px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .info-strip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .verdict { font-weight: 700; }
+  .verdict.up   { color: var(--div-high); }
+  .verdict.down { color: var(--div-low); }
+  .verdict.none { color: var(--text-muted); }
+  .warnbox {
+    background: #fff7ed; border: 1px solid var(--accent-warn); color: #7c3d00;
+    border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; margin-bottom: 16px;
+  }
+
+  .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px 10px; margin-bottom: 20px; position: relative;
+  }
+  .chart-title { font-size: 0.95rem; font-weight: 700; margin: 0 0 3px; }
+  .chart-title .badge {
+    font-size: 0.66rem; padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+    margin-right: 7px; font-weight: 700; letter-spacing: .04em; color: #fff;
+  }
+  .badge.Z { background: var(--series-1); }
+  .badge.F { background: var(--series-3); }
+  .badge.S { background: var(--series-2); }
+  .badge.M { background: #555; }
+  .badge.Q { background: var(--series-4); }
+  .chart-note { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 8px; line-height: 1.5; }
+  .legend { display:flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-secondary); margin: 2px 0 6px; }
+  .legend span.k { display:inline-flex; align-items:center; gap:6px; }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display:inline-block; }
+  svg { display: block; width: 100%; height: auto; }
+  .axis-line { stroke: var(--baseline); stroke-width: 1; fill: none; }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .tick-label { fill: var(--text-muted); font-size: 10px; }
+  .axis-label { fill: var(--text-secondary); font-size: 11px; }
+  .series-path { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .contour-path { fill: none; stroke-width: 1; stroke: rgba(0,0,0,0.30); }
+  .zero-line { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 2 3; }
+  .cross-line { stroke: #333; stroke-width: 1; stroke-dasharray: 3 3; }
+  .panel-title { fill: var(--text-primary); font-size: 11px; font-weight: 700; }
+  .inline-lbl { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+  .big-lbl { font-size: 12px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3.5px; stroke-linejoin: round; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 50; opacity: 0;
+    background: rgba(255,255,255,0.97); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; font-size: 0.76rem; color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.13); transition: opacity .08s linear; max-width: 280px;
+  }
+  .tooltip b { font-variant-numeric: tabular-nums; }
+  .tooltip .row { display:flex; justify-content: space-between; gap: 12px; }
+  .tooltip .row i { width: 10px; height: 3px; border-radius: 2px; display:inline-block; margin-right: 5px; }
+
+  table.data { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 4px 0 12px; }
+  table.data th, table.data td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--gridline); font-variant-numeric: tabular-nums; }
+  table.data th { color: var(--text-secondary); font-weight: 600; }
+  table.data td:first-child, table.data th:first-child { text-align: left; }
+  table.data tr.total td { font-weight: 700; border-top: 2px solid var(--baseline); border-bottom: none; }
+
+  footer { text-align:center; color: var(--text-muted); font-size: 0.78rem; margin-top: 26px; line-height:1.6; }
+
+  @media (max-width: 1100px) {
+    .layout-grid { grid-template-columns: 1fr; }
+    .side-panel { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+
+  <h1>Vorticidad potencial cuasi-geostrófica</h1>
+  <p class="subtitle">
+    Holton, <i>An Introduction to Dynamic Meteorology</i> (4ª ed.), §6.3.2, ecs. (6.24)–(6.25).
+    La ecuación de tendencia del geopotencial esconde su verdadera naturaleza: es una
+    <b>ley de conservación</b>. Toma una columna con vorticidad relativa propia, <b>arrástrala</b> por el
+    dominio (o usa las flechas) y mira cómo los tres sumandos de <span class="mono">q</span> se
+    reparten el trabajo mientras la suma no cambia.
+  </p>
+
+  <div class="eqbox">
+    <div class="eq" style="margin-bottom:14px">
+      <span><span class="frac"><span class="num">D<sub>g</sub>q</span><span class="den">Dt</span></span>
+        &equiv; ( <span class="frac"><span class="num">&part;</span><span class="den">&part;t</span></span>
+        + <b>V</b><sub>g</sub>&sdot;&nabla; ) q = 0</span>
+      <span style="font-family:system-ui;font-size:0.78rem;color:var(--text-muted);margin-left:14px">(6.24)</span>
+    </div>
+    <div class="eq">
+      <span>q &equiv;&nbsp;</span>
+      <span class="grp">
+        <span><span class="frac"><span class="num">1</span><span class="den">f&#8320;</span></span>&nabla;&sup2;&Phi;</span>
+        <span class="under" style="border-color:var(--series-1)"></span>
+        <span class="tag tagZ">&zeta;<sub>g</sub> · vorticidad relativa</span>
+      </span>
+      <span>&nbsp;+&nbsp;</span>
+      <span class="grp">
+        <span>f</span>
+        <span class="under" style="border-color:var(--series-3)"></span>
+        <span class="tag tagF">vorticidad planetaria</span>
+      </span>
+      <span>&nbsp;+&nbsp;</span>
+      <span class="grp">
+        <span><span class="frac"><span class="num">&part;</span><span class="den">&part;p</span></span>
+          ( <span class="frac"><span class="num">f&#8320;</span><span class="den">&sigma;</span></span>
+          <span class="frac"><span class="num">&part;&Phi;</span><span class="den">&part;p</span></span> )</span>
+        <span class="under" style="border-color:var(--series-2)"></span>
+        <span class="tag tagS">&zeta;<sub>e</sub> · vorticidad de estiramiento</span>
+      </span>
+      <span style="font-family:system-ui;font-size:0.78rem;color:var(--text-muted);margin-left:14px">(6.25)</span>
+    </div>
+  </div>
+
+  <details class="deriv">
+    <summary>▸ De la ecuación de tendencia (6.23) a la conservación de q</summary>
+    <div class="body">
+      <ol>
+        <li>
+          Se parte de la <b>ecuación de tendencia del geopotencial</b> (6.23):
+          <div class="eq">[&nabla;&sup2; + &part;/&part;p(f&#8320;&sup2;/&sigma; &part;/&part;p)]&chi;
+            = &minus;f&#8320;<b>V</b><sub>g</sub>&sdot;&nabla;((1/f&#8320;)&nabla;&sup2;&Phi; + f)
+            &minus; &part;/&part;p[&minus;(f&#8320;&sup2;/&sigma;)<b>V</b><sub>g</sub>&sdot;&nabla;(&minus;&part;&Phi;/&part;p)]</div>
+        </li>
+        <li>
+          <b>Regla de la cadena en el término C.</b> Al derivar respecto de p el producto aparecen dos piezas:
+          <div class="eq">&minus;<span class="frac"><span class="num">f&#8320;&sup2;</span><span class="den">&sigma;</span></span>
+            <b>V</b><sub>g</sub>&sdot;&nabla;<span class="frac"><span class="num">&part;</span><span class="den">&part;p</span></span>
+            ( <span class="frac"><span class="num">&part;&Phi;</span><span class="den">&part;p</span></span> )
+            &nbsp;&minus;&nbsp;
+            <span class="frac"><span class="num">f&#8320;&sup2;</span><span class="den">&sigma;</span></span>
+            <span class="frac"><span class="num">&part;<b>V</b><sub>g</sub></span><span class="den">&part;p</span></span>
+            &sdot;&nabla;( <span class="frac"><span class="num">&part;&Phi;</span><span class="den">&part;p</span></span> )</div>
+          La <b>segunda se anula idénticamente</b>: por la relación del viento térmico
+          <span class="mono">f&#8320;&part;<b>V</b><sub>g</sub>/&part;p = <b>k</b>&times;&nabla;(&part;&Phi;/&part;p)</span>,
+          o sea <span class="mono">&part;<b>V</b><sub>g</sub>/&part;p</span> es <b>perpendicular</b> a
+          <span class="mono">&nabla;(&part;&Phi;/&part;p)</span> y el producto punto es cero.
+        </li>
+        <li>
+          Lo que queda es la advección geostrófica de la <i>anomalía normalizada de estabilidad estática</i>,
+          que se junta con el término B. Recordando <span class="mono">&chi; = &part;&Phi;/&part;t</span> y
+          dividiendo por f&#8320;, toda la ecuación colapsa en <b>(6.24)</b>: la conservación de
+          <span class="mono">q</span> siguiendo el movimiento <b>geostrófico</b>.
+        </li>
+      </ol>
+      <div class="note">
+        <b>Qué es y qué no es q.</b> Es proporcional a una <b>forma linealizada</b> de la vorticidad potencial de
+        Ertel del cap. 4, pero tiene <b>unidades de vorticidad</b> y se calcula <b>sólo</b> con el campo de
+        geopotencial en superficies isobáricas. Ertel se conserva siguiendo el movimiento adiabático sobre
+        superficies isentrópicas; <span class="mono">q</span> se conserva siguiendo el movimiento
+        <i>geostrófico</i> sobre superficies <i>isobáricas</i>. Por eso algunos autores prefieren llamarla
+        <b>pseudo-vorticidad potencial</b>.
+      </div>
+      <div class="note">
+        <b>Dos consecuencias que conviene tener a mano.</b><br>
+        (i) <span class="mono">q &prop; &minus;&Phi;</span> a grandes rasgos: un <b>aumento local de q</b> significa
+        <b>profundización de vaguada</b>; una disminución, construcción de dorsal.<br>
+        (ii) El flujo es <b>estacionario</b> si <span class="mono"><b>V</b><sub>g</sub>&sdot;&nabla;q = 0</span>,
+        es decir si el viento geostrófico es paralelo a las líneas de <span class="mono">q</span> constante.
+        En la carta de abajo: <b>si mueves la columna a lo largo de un contorno de q del ambiente, su vorticidad
+        relativa no cambia.</b>
+      </div>
+    </div>
+  </details>
+
+  <details class="deriv">
+    <summary>▸ Cómo se traduce &zeta;<sub>e</sub> en «la columna se estira o se comprime» (y la letra chica del modelo)</summary>
+    <div class="body">
+      El término de estiramiento parece abstracto, pero es exactamente el análogo cuasi-geostrófico del
+      <span class="mono">1/h</span> de la vorticidad potencial de agua somera. Usando la hidrostática
+      (<span class="mono">&part;&Phi;/&part;p = &minus;RT/p</span>) y la definición de &sigma;:
+      <div class="eq">
+        <span class="frac"><span class="num">f&#8320;</span><span class="den">&sigma;</span></span>
+        <span class="frac"><span class="num">&part;&Phi;&prime;</span><span class="den">&part;p</span></span>
+        = f&#8320; <span class="frac"><span class="num">&theta;&prime;</span><span class="den">&part;&theta;&#8320;/&part;p</span></span>
+        = &minus; f&#8320; &delta;p
+        &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+        &zeta;<sub>e</sub> = &minus; f&#8320; <span class="frac"><span class="num">&part;(&delta;p)</span><span class="den">&part;p</span></span>
+      </div>
+      donde <span class="mono">&delta;p = &minus;&theta;&prime;/(&part;&theta;&#8320;/&part;p)</span> es el
+      <b>desplazamiento vertical de la superficie isentrópica</b> medido en presión. Para una capa entre dos
+      isentropas de espesor de referencia <span class="mono">&Delta;p<sub>ref</sub></span>, la versión en
+      diferencias finitas es
+      <div class="eq">&zeta;<sub>e</sub> = &minus; f&#8320; <span class="frac"><span class="num">&Delta;p &minus; &Delta;p<sub>ref</sub></span><span class="den">&Delta;p<sub>ref</sub></span></span>
+        = &minus; f&#8320; ( s &minus; 1 ), &nbsp;&nbsp; s &equiv; &Delta;p / &Delta;p<sub>ref</sub></div>
+      <b>Traducción:</b> columna <b>estirada</b> (s &gt; 1) ⇒ <span class="mono">&zeta;<sub>e</sub></span> negativo (en el
+      HN) ⇒ como q se conserva, <span class="mono">&zeta;<sub>g</sub> + f</span> tiene que <b>crecer</b>: la columna
+      <b>gira más ciclónicamente</b>. Columna <b>comprimida</b> ⇒ lo contrario. Es exactamente la patinadora
+      artística, y la fórmula funciona igual en el hemisferio sur (con f&#8320; &lt; 0 los signos se invierten de
+      forma consistente).
+      <div class="note warn">
+        <b>Letra chica del modelo.</b> (1) La conservación de q <b>no</b> determina por sí sola cómo se reparte el
+        cambio entre <span class="mono">&zeta;<sub>g</sub></span> y <span class="mono">&zeta;<sub>e</sub></span>:
+        hace falta una hipótesis de cierre. Por eso el panel derecho te deja elegir <b>quién compensa</b>, y
+        conviene mostrar las tres opciones en clase. (2) El «ambiente» (el campo de espesor isentrópico que la
+        columna atraviesa) está <b>prescrito</b>, como se hace con la topografía en agua somera: es el paisaje por
+        el que viaja la parcela, no una solución dinámica. (3) La columna se dibuja expandiéndose simétricamente
+        respecto de su nivel medio; es una convención gráfica.
+      </div>
+    </div>
+  </details>
+
+  <div class="toolbar">
+    <div class="presets">
+      <button class="btn" data-preset="norte">Ciclón que viaja al norte</button>
+      <button class="btn" data-preset="este">Ciclón que cruza el ambiente (este)</button>
+      <button class="btn" data-preset="anti">Anticiclón que baja al sur</button>
+      <button class="btn" data-preset="plano">Ambiente plano (sólo β)</button>
+      <button class="btn" data-preset="sur">Hemisferio sur</button>
+    </div>
+    <button class="btn" id="resetBtn">Restaurar valores por defecto</button>
+  </div>
+
+  <div class="layout-grid">
+
+    <!-- ===== Panel izquierdo ===== -->
+    <aside class="side-panel">
+      <div class="group">
+        <h2>La columna</h2>
+
+        <div class="ctrl">
+          <label><span>&zeta;<sub>g</sub> inicial</span> <span class="val" id="v_zg0"></span></label>
+          <input type="range" id="zg0" min="-8" max="8" step="0.25">
+          <span class="hint">×10⁻⁵ s⁻¹. Positivo = giro <b>antihorario</b>. Es ciclónico en el HN y anticiclónico en el HS.</span>
+        </div>
+
+        <div class="ctrl">
+          <label><span>&Delta;p<sub>ref</sub> — espesor de referencia</span> <span class="val" id="v_href"></span></label>
+          <input type="range" id="href" min="100" max="400" step="10">
+          <span class="hint">Espesor en presión de la capa entre las dos isentropas, en el punto de partida.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Ambiente</h2>
+
+        <div class="ctrl">
+          <label>f&#8320; (en y = 0) <span class="val" id="v_f0"></span></label>
+          <input type="range" id="f0" min="-1.4" max="1.4" step="0.05">
+          <span class="hint">×10⁻⁴ s⁻¹. Negativo = <b>hemisferio sur</b>.</span>
+        </div>
+
+        <div class="ctrl">
+          <label>&beta; <span class="val" id="v_beta"></span></label>
+          <input type="range" id="beta" min="0" max="3" step="0.05">
+          <span class="hint">×10⁻¹¹ m⁻¹s⁻¹. Con β = 1.6, mover 1000 km al norte cambia f en 1.6×10⁻⁵ s⁻¹.</span>
+        </div>
+
+        <div class="ctrl hot">
+          <label><span>Onda zonal del espesor</span> <span class="val" id="v_Az"></span></label>
+          <input type="range" id="Az" min="0" max="30" step="1">
+          <span class="hint">Amplitud, en % del espesor de referencia. <b>Es lo que hace que moverse al este o al oeste importe.</b> En 0 el ambiente no tiene estructura zonal.</span>
+        </div>
+
+        <div class="ctrl hot">
+          <label><span>L<sub>e</sub> — longitud de onda zonal</span> <span class="val" id="v_Lz"></span></label>
+          <input type="range" id="Lz" min="1000" max="12000" step="250">
+        </div>
+
+        <div class="ctrl hot">
+          <label><span>Pendiente meridional del espesor</span> <span class="val" id="v_Am"></span></label>
+          <input type="range" id="Am" min="-15" max="15" step="0.5">
+          <span class="hint">% por cada 1000 km hacia el <b>norte</b>. Negativo = capa más delgada hacia el polo (tropopausa más baja).</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Columna central ===== -->
+    <main class="center-col">
+      <div id="warnHost"></div>
+      <div class="info-strip" id="infoStrip"></div>
+
+      <!-- 0) carta en planta -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge M">0</span>Carta en planta: arrastra la columna</p>
+        <p class="chart-note" id="mapNote"></p>
+        <div class="legend" id="legMap"></div>
+        <svg id="svgMap" viewBox="0 0 800 430" tabindex="0"></svg>
+      </div>
+
+      <!-- 1) balance -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge Q">q</span>El balance de (6.25): quién sube y quién baja</p>
+        <p class="chart-note">
+          Barras del <b>estado inicial</b> (arriba, en tono claro) y del <b>estado actual</b> (abajo).
+          La línea violeta vertical marca <span class="mono">q</span>, que <b>no se mueve</b>: eso es (6.24).
+          Todo lo que uno de los sumandos gana, otro lo pierde.
+        </p>
+        <div class="legend" id="legBal"></div>
+        <svg id="svgBal" viewBox="0 0 800 250"></svg>
+      </div>
+
+      <!-- 2) vista lateral -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge S">&zeta;<sub>e</sub></span>Vista lateral: la columna entre dos isentropas</p>
+        <p class="chart-note" id="sideNote"></p>
+        <div class="legend" id="legSide"></div>
+        <svg id="svgSide" viewBox="0 0 800 330"></svg>
+      </div>
+
+      <!-- 3) evolución -->
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge Q">q</span>Evolución a lo largo del recorrido</p>
+        <p class="chart-note">
+          Cambios respecto del punto de partida a medida que arrastras la columna:
+          <span class="mono">&Delta;&zeta;<sub>g</sub> + &Delta;f + &Delta;&zeta;<sub>e</sub> = 0</span> en todo momento.
+          La línea violeta (&Delta;q) debe quedarse pegada al cero — si no, hay un error numérico.
+        </p>
+        <div class="legend" id="legEvo"></div>
+        <svg id="svgEvo" viewBox="0 0 800 250"></svg>
+      </div>
+
+      <div class="chart-card">
+        <p class="chart-title"><span class="badge M">✓</span>Estado numérico</p>
+        <div id="tableHost"></div>
+      </div>
+
+      <footer>
+        Dinámica de la Atmósfera · Unidad A · Vorticidad potencial cuasi-geostrófica<br>
+        Basado en Holton (2004), <i>An Introduction to Dynamic Meteorology</i>, 4ª ed., §6.3.2, ecs. (6.24)–(6.26).
+      </footer>
+    </main>
+
+    <!-- ===== Panel derecho ===== -->
+    <aside class="side-panel">
+      <div class="group hot">
+        <h2>★ Mover la columna</h2>
+
+        <div class="padwrap">
+          <span class="spacer"></span>
+          <button data-move="N">↑ N</button>
+          <span class="spacer"></span>
+          <button data-move="W">← O</button>
+          <button class="home" data-move="H">inicio</button>
+          <button data-move="E">E →</button>
+          <span class="spacer"></span>
+          <button data-move="S">↓ S</button>
+          <span class="spacer"></span>
+        </div>
+        <span class="hint">También puedes <b>arrastrar</b> la columna en la carta, o hacer clic en la carta y usar las flechas del teclado.</span>
+
+        <div class="ctrl hot">
+          <label>Paso de cada flecha <span class="val" id="v_step"></span></label>
+          <input type="range" id="step" min="50" max="1000" step="50">
+        </div>
+
+        <div class="ctrl hot">
+          <label>x — posición este–oeste <span class="val" id="v_px"></span></label>
+          <input type="range" id="px" min="-3000" max="3000" step="10">
+        </div>
+
+        <div class="ctrl hot">
+          <label>y — posición norte–sur <span class="val" id="v_py"></span></label>
+          <input type="range" id="py" min="-2000" max="2000" step="10">
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>¿Quién compensa?</h2>
+        <div class="radio-row">
+          <label><input type="radio" name="closure" value="amb" checked>
+            <span>El <b>ambiente</b> fija &zeta;<sub>e</sub>; &zeta;<sub>g</sub> es el residuo</span></label>
+          <label><input type="radio" name="closure" value="rigid">
+            <span><b>Columna rígida</b>: &zeta;<sub>e</sub> congelado; &zeta;<sub>g</sub> compensa</span></label>
+          <label><input type="radio" name="closure" value="spin">
+            <span><b>Giro rígido</b>: &zeta;<sub>g</sub> congelado; la columna se estira o comprime</span></label>
+        </div>
+        <span class="hint">La conservación de q fija <i>la suma</i>, no el reparto. Cada opción es una hipótesis
+          distinta sobre qué se mantiene. En las dos últimas el ambiente se ignora, así que
+          <b>sólo el desplazamiento norte–sur cambia algo</b>.</span>
+      </div>
+
+      <div class="group">
+        <h2>Visualización</h2>
+        <div class="radio-row">
+          <label><input type="radio" name="shade" value="q" checked> sombrear q del ambiente</label>
+          <label><input type="radio" name="shade" value="ze"> sombrear &zeta;<sub>e</sub> del ambiente</label>
+          <label><input type="radio" name="shade" value="f"> sombrear f</label>
+          <label><input type="radio" name="shade" value="s"> sombrear espesor s</label>
+        </div>
+
+        <div class="ctrl">
+          <label>Contornos de q <span class="val" id="v_nlev"></span></label>
+          <input type="range" id="nlev" min="0" max="20" step="2">
+        </div>
+
+        <div class="radio-row">
+          <label><input type="radio" name="cut" value="x" checked> corte lateral este–oeste</label>
+          <label><input type="radio" name="cut" value="y"> corte lateral norte–sur</label>
+        </div>
+
+        <button class="btn" id="clearTrail">Borrar el rastro</button>
+      </div>
+
+      <div class="group">
+        <h2>Lecturas rápidas</h2>
+        <div class="hint" id="readouts" style="font-size:0.75rem; line-height:1.7;"></div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==================================================================
+     0. Constantes y parámetros
+     ================================================================== */
+  const NXM = 241, NYM = 161;         // grilla de la carta
+  const OMEGA = 7.292e-5;
+  const PMID = 550;                   // hPa, nivel medio de la capa (vista lateral)
+
+  const DEFAULTS = {
+    zg0: 4, href: 250,
+    f0: 1.0, beta: 1.6, Az: 12, Lz: 4000, Am: -5,
+    step: 500, px: 0, py: 0, nlev: 10
+  };
+
+  const PRESETS = {
+    norte: { px: 0, py: 1500 },
+    este:  { px: 1000, py: 0, Az: 18 },
+    anti:  { zg0: -4, px: 0, py: -1500 },
+    plano: { Az: 0, Am: 0, px: 0, py: 1500 },
+    sur:   { f0: -1.0, zg0: -4, px: 0, py: -1500 }
+  };
+
+  const IDS = ["zg0","href","f0","beta","Az","Lz","Am","step","px","py","nlev"];
+  const els = {};
+  IDS.forEach(id => els[id] = document.getElementById(id));
+
+  let trail = [];      // [{x,y,zg,f,ze,q}]  en unidades SI, x/y en m
+
+  function applyParams(obj) {
+    IDS.forEach(id => { if (obj[id] !== undefined) els[id].value = obj[id]; });
+  }
+  function setRadio(name, value) {
+    const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (r) r.checked = true;
+  }
+  function loadDefaults() {
+    applyParams(DEFAULTS);
+    setRadio("closure", "amb");
+    setRadio("shade", "q");
+    setRadio("cut", "x");
+    trail = [];
+  }
+
+  /* ==================================================================
+     1. Utilidades SVG
+     ================================================================== */
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function clearSvg(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(name).trim();
+  }
+  function cssVarSafe(n, f) { try { const v = cssVar(n); return v || f; } catch (e) { return f; } }
+  function linScale(domain, range) {
+    const [d0, d1] = domain, [r0, r1] = range;
+    const m = (r1 - r0) / ((d1 - d0) || 1e-30);
+    return v => r0 + (v - d0) * m;
+  }
+  function niceStep(raw) {
+    if (!(raw > 0) || !isFinite(raw)) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    let s;
+    if (norm < 1.5) s = 1; else if (norm < 3) s = 2; else if (norm < 7) s = 5; else s = 10;
+    return s * mag;
+  }
+  function niceTicks(min, max, count) {
+    if (max < min) { const t = min; min = max; max = t; }
+    if (max <= min) max = min + 1;
+    const step = niceStep((max - min) / count);
+    const ticks = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step)
+      ticks.push(Math.round(v * 1e9) / 1e9);
+    return ticks;
+  }
+  function fmt(v, d) {
+    if (!isFinite(v)) return "—";
+    if (v === 0) return "0";
+    const av = Math.abs(v);
+    if (d !== undefined) return v.toFixed(d);
+    if (av >= 1000) return v.toLocaleString("es-CL", {maximumFractionDigits: 0});
+    if (av >= 10)   return v.toLocaleString("es-CL", {maximumFractionDigits: 1});
+    if (av >= 0.1)  return v.toLocaleString("es-CL", {maximumFractionDigits: 2});
+    return v.toPrecision(2);
+  }
+  function signed(v, d) { return (v >= 0 ? "+" : "") + v.toFixed(d === undefined ? 2 : d); }
+
+  function drawFrame(svg, box, xDomain, yDomain, xLabel, yLabel, opts) {
+    const o = opts || {};
+    const {x0, x1, y0, y1} = box;
+    const xScale = linScale(xDomain, [x0, x1]);
+    const yScale = linScale(yDomain, [y1, y0]);
+    const g = svgEl("g", {});
+    svg.appendChild(g);
+    const xt = o.xTicks || niceTicks(Math.min(...xDomain), Math.max(...xDomain), o.nxt || 7);
+    const yt = o.yTicks || niceTicks(Math.min(...yDomain), Math.max(...yDomain), o.nyt || 5);
+    xt.forEach(t => {
+      const px = xScale(t);
+      if (px < x0 - 0.5 || px > x1 + 0.5) return;
+      g.appendChild(svgEl("line", {x1: px, x2: px, y1: y0, y2: y1, class: "grid-line"}));
+      const lbl = svgEl("text", {x: px, y: y1 + 15, class: "tick-label", "text-anchor": "middle"});
+      lbl.textContent = (o.xFmt || fmt)(t);
+      g.appendChild(lbl);
+    });
+    yt.forEach(t => {
+      const py = yScale(t);
+      if (py < y0 - 0.5 || py > y1 + 0.5) return;
+      g.appendChild(svgEl("line", {x1: x0, x2: x1, y1: py, y2: py, class: "grid-line"}));
+      const lbl = svgEl("text", {x: x0 - 7, y: py + 3.5, class: "tick-label", "text-anchor": "end"});
+      lbl.textContent = (o.yFmt || fmt)(t);
+      g.appendChild(lbl);
+    });
+    g.appendChild(svgEl("line", {x1: x0, x2: x1, y1: y1, y2: y1, class: "axis-line"}));
+    g.appendChild(svgEl("line", {x1: x0, x2: x0, y1: y0, y2: y1, class: "axis-line"}));
+    if (xLabel) {
+      const t = svgEl("text", {x: (x0 + x1) / 2, y: y1 + 31, class: "axis-label", "text-anchor": "middle"});
+      t.textContent = xLabel; g.appendChild(t);
+    }
+    if (yLabel) {
+      const cy = (y0 + y1) / 2;
+      const t = svgEl("text", {x: x0 - 42, y: cy, class: "axis-label", "text-anchor": "middle",
+                               transform: `rotate(-90, ${x0 - 42}, ${cy})`});
+      t.textContent = yLabel; g.appendChild(t);
+    }
+    return {xScale, yScale, box};
+  }
+  function pathOf(xScale, yScale, xs, ys) {
+    let d = "";
+    for (let i = 0; i < xs.length; i++) {
+      const px = xScale(xs[i]), py = yScale(ys[i]);
+      if (!isFinite(px) || !isFinite(py)) continue;
+      d += (d === "" ? "M" : "L") + px.toFixed(2) + "," + py.toFixed(2) + " ";
+    }
+    return d.trim();
+  }
+
+  /* --- colormap divergente --- */
+  function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  let CLOW = [37,99,235], CMID = [240,239,236], CHIGH = [220,38,38];
+  function refreshColors() {
+    CLOW = hexToRgb(cssVarSafe("--div-low", "#2563eb"));
+    CMID = hexToRgb(cssVarSafe("--div-mid", "#f0efec"));
+    CHIGH = hexToRgb(cssVarSafe("--div-high", "#dc2626"));
+  }
+  function divColor(t) {
+    t = Math.max(-1, Math.min(1, t));
+    const a = t < 0 ? CLOW : CHIGH;
+    const s = Math.abs(t);
+    return [CMID[0] + (a[0] - CMID[0]) * s,
+            CMID[1] + (a[1] - CMID[1]) * s,
+            CMID[2] + (a[2] - CMID[2]) * s];
+  }
+  function divHex(t) {
+    const c = divColor(t);
+    return "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+  }
+  const hmCanvas = document.createElement("canvas");
+  function fieldImage(Z, nx, ny, vmin, vmax) {
+    hmCanvas.width = nx; hmCanvas.height = ny;
+    const ctx = hmCanvas.getContext("2d");
+    const img = ctx.createImageData(nx, ny);
+    const half = Math.max(Math.abs(vmax), Math.abs(vmin)) || 1;
+    const mid = (vmax + vmin) / 2;
+    const amp = Math.max((vmax - vmin) / 2, 1e-30);
+    let q = 0;
+    for (let j = 0; j < ny; j++) {
+      for (let i = 0; i < nx; i++) {
+        const c = divColor((Z[j][i] - mid) / amp);
+        img.data[q++] = c[0]; img.data[q++] = c[1]; img.data[q++] = c[2]; img.data[q++] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return hmCanvas.toDataURL();
+  }
+  function contourSegs(Z, nx, ny, level) {
+    const out = [];
+    const ip = (a, b) => (level - a) / ((b - a) || 1e-30);
+    for (let j = 0; j < ny - 1; j++) {
+      for (let i = 0; i < nx - 1; i++) {
+        const v0 = Z[j][i], v1 = Z[j][i + 1], v2 = Z[j + 1][i + 1], v3 = Z[j + 1][i];
+        let idx = 0;
+        if (v0 > level) idx |= 8;
+        if (v1 > level) idx |= 4;
+        if (v2 > level) idx |= 2;
+        if (v3 > level) idx |= 1;
+        if (idx === 0 || idx === 15) continue;
+        const top = [i + ip(v0, v1), j], right = [i + 1, j + ip(v1, v2)];
+        const bottom = [i + ip(v3, v2), j + 1], left = [i, j + ip(v0, v3)];
+        switch (idx) {
+          case 1: case 14: out.push([left, bottom]); break;
+          case 2: case 13: out.push([bottom, right]); break;
+          case 3: case 12: out.push([left, right]); break;
+          case 4: case 11: out.push([top, right]); break;
+          case 6: case 9:  out.push([top, bottom]); break;
+          case 7: case 8:  out.push([top, left]); break;
+          case 5:  out.push([top, left]); out.push([bottom, right]); break;
+          case 10: out.push([top, right]); out.push([bottom, left]); break;
+        }
+      }
+    }
+    return out;
+  }
+  function contourPathD(Z, nx, ny, level, gx, gy) {
+    let d = "";
+    contourSegs(Z, nx, ny, level).forEach(s => {
+      d += `M${gx(s[0][0]).toFixed(1)},${gy(s[0][1]).toFixed(1)}L${gx(s[1][0]).toFixed(1)},${gy(s[1][1]).toFixed(1)} `;
+    });
+    return d.trim();
+  }
+
+  /* ==================================================================
+     2. Física
+     ================================================================== */
+  function readParams() {
+    const p = {};
+    IDS.forEach(id => p[id] = parseFloat(els[id].value));
+    p.closure = document.querySelector('input[name="closure"]:checked').value;
+    p.shade   = document.querySelector('input[name="shade"]:checked').value;
+    p.cut     = document.querySelector('input[name="cut"]:checked').value;
+    return p;
+  }
+
+  function env(p) {
+    let f0 = p.f0 * 1e-4;
+    if (Math.abs(f0) < 0.2e-4) f0 = f0 < 0 ? -0.2e-4 : 0.2e-4;
+    const beta = p.beta * 1e-11;
+    const Az = p.Az / 100, Am = p.Am / 100, kz = 2 * Math.PI / (p.Lz * 1000);
+    return {
+      f0, beta, Az, Am, kz,
+      f:  y => f0 + beta * y,
+      s:  (x, y) => 1 + Az * Math.sin(kz * x) + Am * (y / 1e6),
+      ze: function (x, y) { return -f0 * (this.s(x, y) - 1); }
+    };
+  }
+
+  // estado de la columna en (x,y) dado el cierre elegido
+  function state(p, E, x, y) {
+    const zg0 = p.zg0 * 1e-5;
+    const ze0 = E.ze(0, 0);            // el punto de partida es siempre (0,0)
+    const f00 = E.f(0);
+    const q0  = zg0 + f00 + ze0;
+    const f   = E.f(y);
+    let zg, ze;
+    if (p.closure === "amb")        { ze = E.ze(x, y);  zg = q0 - f - ze; }
+    else if (p.closure === "rigid") { ze = ze0;         zg = q0 - f - ze; }
+    else                            { zg = zg0;         ze = q0 - f - zg; }
+    const s = 1 - ze / E.f0;           // espesor relativo de la columna
+    return {x, y, zg, f, ze, q: zg + f + ze, s, q0, zg0, ze0, f00,
+            s0: 1 - ze0 / E.f0};
+  }
+
+  /* ==================================================================
+     3. Tooltip
+     ================================================================== */
+  const tip = document.getElementById("tooltip");
+  function showTip(evt, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = 1;
+    const r = tip.getBoundingClientRect();
+    let x = evt.clientX + 14, y = evt.clientY + 14;
+    if (x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - 14;
+    if (y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - 14;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function hideTip() { tip.style.opacity = 0; }
+  function legendHTML(items) {
+    return items.map(it => `<span class="k"><i style="background:${it.color}${it.dash ? ";height:0;border-top:2px dashed " + it.color : ""}"></i>${it.name}</span>`).join("");
+  }
+
+  const COL = {
+    Z: cssVarSafe("--series-1", "#2a78d6"),
+    F: cssVarSafe("--series-3", "#1baf7a"),
+    S: cssVarSafe("--series-2", "#eb6834"),
+    Q: cssVarSafe("--series-4", "#4a3aa7"),
+    low: cssVarSafe("--div-low", "#2563eb"),
+    high: cssVarSafe("--div-high", "#dc2626")
+  };
+
+  /* ==================================================================
+     4. Glifo de la columna (círculo + flecha de giro)
+     ================================================================== */
+  function vortexGlyph(cx, cy, zg, f0, rBase) {
+    const g = svgEl("g", {});
+    const mag = Math.min(1, Math.abs(zg) / 8e-5);
+    const r = rBase * (0.45 + 0.75 * mag);
+    const cyc = (zg * f0) > 0;                 // ciclónico si tiene el signo de f0
+    const col = zg >= 0 ? COL.high : COL.low;  // rojo = giro antihorario
+    g.appendChild(svgEl("circle", {cx, cy, r, fill: col, "fill-opacity": 0.20,
+      stroke: col, "stroke-width": 2.2}));
+    // flecha de giro: arco de 250°
+    const ccw = zg >= 0;
+    const a0 = ccw ? -0.35 : Math.PI + 0.35;
+    const sweep = (ccw ? 1 : -1) * 4.4;
+    const ra = r * 0.62;
+    const x0 = cx + ra * Math.cos(a0), y0 = cy - ra * Math.sin(a0);
+    const a1 = a0 + sweep;
+    const x1 = cx + ra * Math.cos(a1), y1 = cy - ra * Math.sin(a1);
+    g.appendChild(svgEl("path", {
+      d: `M${x0.toFixed(1)},${y0.toFixed(1)} A${ra.toFixed(1)},${ra.toFixed(1)} 0 1 ${ccw ? 0 : 1} ${x1.toFixed(1)},${y1.toFixed(1)}`,
+      fill: "none", stroke: col, "stroke-width": 2.4, "stroke-linecap": "round"}));
+    // punta de flecha
+    const tang = a1 + (ccw ? Math.PI / 2 : -Math.PI / 2);
+    const hx = x1 + 6 * Math.cos(tang), hy = y1 - 6 * Math.sin(tang);
+    const p1x = x1 + 4 * Math.cos(tang + 2.4), p1y = y1 - 4 * Math.sin(tang + 2.4);
+    const p2x = x1 + 4 * Math.cos(tang - 2.4), p2y = y1 - 4 * Math.sin(tang - 2.4);
+    g.appendChild(svgEl("path", {d: `M${hx.toFixed(1)},${hy.toFixed(1)}L${p1x.toFixed(1)},${p1y.toFixed(1)}L${p2x.toFixed(1)},${p2y.toFixed(1)}Z`,
+      fill: col}));
+    return {g, r, cyc, col};
+  }
+
+  /* ==================================================================
+     5. Carta en planta
+     ================================================================== */
+  let dragging = false;
+  let MAPBOX = {x0: 94, x1: 692, y0: 14, y1: 390};
+  function mapToData(evt) {
+    const svg = document.getElementById("svgMap");
+    const pt = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+    const px = (evt.clientX - pt.left) / pt.width * vb.width;
+    const py = (evt.clientY - pt.top) / pt.height * vb.height;
+    const fx = (px - MAPBOX.x0) / (MAPBOX.x1 - MAPBOX.x0);
+    const fy = (py - MAPBOX.y0) / (MAPBOX.y1 - MAPBOX.y0);
+    return {x: Math.max(-3000, Math.min(3000, -3000 + 6000 * fx)),
+            y: Math.max(-2000, Math.min(2000, 2000 - 4000 * fy))};
+  }
+  function drawMap(p, E, st) {
+    const svg = document.getElementById("svgMap");
+    clearSvg(svg);
+    const W = 800, H = 430;
+    const box = {x0: 94, x1: W - 108, y0: 14, y1: H - 40};
+    const XMAX = 3000e3, YMAX = 2000e3;
+
+    const xs = [], ys = [];
+    for (let i = 0; i < NXM; i++) xs.push(-XMAX + 2 * XMAX * i / (NXM - 1));
+    for (let j = 0; j < NYM; j++) ys.push(YMAX - 2 * YMAX * j / (NYM - 1));   // j=0 -> norte
+
+    const Zsh = new Array(NYM), Zq = new Array(NYM);
+    let vmin = Infinity, vmax = -Infinity;
+    for (let j = 0; j < NYM; j++) {
+      const rs = new Float64Array(NXM), rq = new Float64Array(NXM);
+      for (let i = 0; i < NXM; i++) {
+        const qamb = E.f(ys[j]) + E.ze(xs[i], ys[j]);
+        rq[i] = qamb;
+        let v;
+        if (p.shade === "q") v = qamb;
+        else if (p.shade === "ze") v = E.ze(xs[i], ys[j]);
+        else if (p.shade === "f") v = E.f(ys[j]);
+        else v = E.s(xs[i], ys[j]);
+        rs[i] = v;
+        if (v < vmin) vmin = v;
+        if (v > vmax) vmax = v;
+      }
+      Zsh[j] = rs; Zq[j] = rq;
+    }
+
+    const yFmtLat = v => {
+      const lat = latOf(E.f0 + E.beta * v * 1000, E);
+      return fmt(v, 0) + (isFinite(lat) ? "  (" + lat.toFixed(0) + "°)" : "");
+    };
+    const fr = drawFrame(svg, box, [-3000, 3000], [-2000, 2000],
+      "x [km]  (→ este)", "y [km]  (→ norte)  ·  latitud", {nxt: 7, nyt: 5, yFmt: yFmtLat});
+
+    const url = fieldImage(Zsh, NXM, NYM, vmin, vmax);
+    const img = svgEl("image", {x: box.x0, y: box.y0,
+      width: box.x1 - box.x0, height: box.y1 - box.y0, preserveAspectRatio: "none"});
+    img.setAttribute("href", url);
+    img.setAttributeNS("http://www.w3.org/1999/xlink", "href", url);
+    svg.insertBefore(img, svg.firstChild);
+    svg.appendChild(svg.firstChild.nextSibling);
+
+    const gx = linScale([0, NXM - 1], [box.x0, box.x1]);
+    const gy = linScale([0, NYM - 1], [box.y0, box.y1]);
+
+    // contornos de q del ambiente (siempre)
+    if (p.nlev > 0) {
+      let qmin = Infinity, qmax = -Infinity;
+      for (let j = 0; j < NYM; j++) for (let i = 0; i < NXM; i++) {
+        if (Zq[j][i] < qmin) qmin = Zq[j][i];
+        if (Zq[j][i] > qmax) qmax = Zq[j][i];
+      }
+      const stp = niceStep((qmax - qmin) / p.nlev);
+      const g = svgEl("g", {});
+      for (let lv = Math.ceil(qmin / stp) * stp; lv <= qmax; lv += stp) {
+        const d = contourPathD(Zq, NXM, NYM, lv, gx, gy);
+        if (d) g.appendChild(svgEl("path", {d, class: "contour-path"}));
+      }
+      svg.appendChild(g);
+    }
+
+    // contorno del q de la columna (la línea sobre la que ζ_g no cambiaría)
+    if (p.closure === "amb") {
+      const d = contourPathD(Zq, NXM, NYM, st.q - st.zg0, gx, gy);
+      if (d) svg.appendChild(svgEl("path", {d, fill: "none", stroke: COL.Q,
+        "stroke-width": 2, "stroke-dasharray": "7 4", opacity: 0.9}));
+    }
+
+    const sx = v => fr.xScale(v / 1000), sy = v => fr.yScale(v / 1000);
+
+    // rastro
+    if (trail.length > 1) {
+      let d = "";
+      trail.forEach((t, i) => { d += (i ? "L" : "M") + sx(t.x).toFixed(1) + "," + sy(t.y).toFixed(1) + " "; });
+      svg.appendChild(svgEl("path", {d: d.trim(), fill: "none", stroke: "#444",
+        "stroke-width": 1.4, "stroke-dasharray": "3 3", opacity: 0.65}));
+    }
+
+    // punto de partida
+    svg.appendChild(svgEl("circle", {cx: sx(0), cy: sy(0), r: 4.5, fill: "none",
+      stroke: "#333", "stroke-width": 1.6}));
+    const t0 = svgEl("text", {x: sx(0) + 7, y: sy(0) + 13, class: "inline-lbl", fill: "#333"});
+    t0.textContent = "inicio"; svg.appendChild(t0);
+
+    // la columna
+    const gl = vortexGlyph(sx(st.x), sy(st.y), st.zg, E.f0, 26);
+    gl.g.setAttribute("style", "cursor:grab");
+    svg.appendChild(gl.g);
+    const nearTop = sy(st.y) - gl.r - 12 < box.y0;
+    const nearBot = sy(st.y) + gl.r + 20 > box.y1;
+    const yMain = nearTop ? sy(st.y) + gl.r + 16 : sy(st.y) - gl.r - 8;
+    const ySub  = nearTop ? sy(st.y) + gl.r + 29 : (nearBot ? sy(st.y) - gl.r - 20 : sy(st.y) + gl.r + 14);
+    let lx = sx(st.x);
+    lx = Math.max(box.x0 + 42, Math.min(box.x1 - 42, lx));
+    const lbl = svgEl("text", {x: lx, y: yMain,
+      class: "big-lbl", fill: gl.col, "text-anchor": "middle"});
+    lbl.textContent = `\u03b6g = ${signed(st.zg * 1e5, 2)}`;
+    svg.appendChild(lbl);
+    const lbl2 = svgEl("text", {x: lx, y: ySub,
+      class: "inline-lbl", fill: gl.col, "text-anchor": "middle"});
+    lbl2.textContent = gl.cyc ? "ciclónica" : "anticiclónica";
+    svg.appendChild(lbl2);
+
+    // barra de color
+    drawColorbar(svg, W, box, vmin, vmax, shadeUnit(p));
+
+    // interacción: arrastre + hover
+    const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0,
+      height: box.y1 - box.y0, fill: "transparent", style: "cursor:crosshair"});
+    svg.appendChild(rect);
+    MAPBOX = box;
+    rect.addEventListener("mousedown", evt => {
+      dragging = true; svg.focus(); moveTo(mapToData(evt)); evt.preventDefault();
+    });
+    rect.addEventListener("mousemove", evt => {
+      if (dragging) return;
+      const d = mapToData(evt);
+      const stH = state(p, E, d.x * 1000, d.y * 1000);
+      const qamb = E.f(d.y * 1000) + E.ze(d.x * 1000, d.y * 1000);
+      showTip(evt,
+        `<div style="font-weight:700;margin-bottom:3px">x = ${fmt(d.x, 0)} km · y = ${fmt(d.y, 0)} km</div>` +
+        `<div class="row"><span><i style="background:${COL.F}"></i>f</span><b>${(E.f(d.y * 1000) * 1e5).toFixed(2)}</b></div>` +
+        `<div class="row"><span><i style="background:${COL.S}"></i>ζ<sub>e</sub> del ambiente</span><b>${(E.ze(d.x * 1000, d.y * 1000) * 1e5).toFixed(2)}</b></div>` +
+        `<div class="row"><span><i style="background:${COL.Q}"></i>q del ambiente</span><b>${(qamb * 1e5).toFixed(2)}</b></div>` +
+        `<div class="row"><span>espesor s</span><b>${(E.s(d.x * 1000, d.y * 1000) * 100).toFixed(0)} %</b></div>` +
+        `<div style="margin-top:4px;color:#666">×10⁻⁵ s⁻¹ · arrastra para llevar la columna aquí</div>`);
+    });
+    rect.addEventListener("mouseleave", () => { hideTip(); });
+
+    document.getElementById("legMap").innerHTML =
+      `<span class="k"><i style="background:#666"></i>contornos de q del ambiente</span>` +
+      (p.closure === "amb" ? `<span class="k"><i style="height:0;border-top:2px dashed ${COL.Q};background:none"></i>contorno donde ζ<sub>g</sub> mantiene su valor inicial</span>` : "") +
+      `<span class="k"><i style="background:${COL.high}"></i>giro antihorario (ζ<sub>g</sub> &gt; 0)</span>` +
+      `<span class="k"><i style="background:${COL.low}"></i>giro horario (ζ<sub>g</sub> &lt; 0)</span>`;
+  }
+
+  function shadeUnit(p) {
+    if (p.shade === "s") return "espesor s";
+    return "×10⁻⁵ s⁻¹";
+  }
+  function drawColorbar(svg, W, box, vmin, vmax, unit) {
+    const cbX = box.x1 + 18, cbW = 13, cbT = box.y0 + 10, cbB = box.y1 - 10;
+    const nsw = 48;
+    for (let i = 0; i < nsw; i++) {
+      const t0 = -1 + 2 * i / nsw, t1 = -1 + 2 * (i + 1) / nsw;
+      const yT = cbT + (1 - (t1 + 1) / 2) * (cbB - cbT);
+      const yB = cbT + (1 - (t0 + 1) / 2) * (cbB - cbT);
+      svg.appendChild(svgEl("rect", {x: cbX, y: yT, width: cbW, height: (yB - yT) + 0.6,
+        fill: divHex((t0 + t1) / 2)}));
+    }
+    svg.appendChild(svgEl("rect", {x: cbX, y: cbT, width: cbW, height: cbB - cbT,
+      fill: "none", stroke: cssVarSafe("--border", "#ccc")}));
+    const isS = unit === "espesor s";
+    [1, 0.5, 0, -0.5, -1].forEach(t => {
+      const py = cbT + (1 - (t + 1) / 2) * (cbB - cbT);
+      const val = (vmin + vmax) / 2 + t * (vmax - vmin) / 2;
+      const lbl = svgEl("text", {x: cbX + cbW + 4, y: py + 3.5, class: "tick-label"});
+      lbl.textContent = isS ? (val * 100).toFixed(0) + " %" : (val * 1e5).toFixed(2);
+      svg.appendChild(lbl);
+    });
+    const ct = svgEl("text", {x: W - 3, y: box.y0 + 4, class: "axis-label", "text-anchor": "end"});
+    ct.textContent = isS ? "" : unit;
+    svg.appendChild(ct);
+  }
+
+  function latOf(f, E) {
+    const s = f / (2 * OMEGA);
+    if (Math.abs(s) > 1) return NaN;
+    return Math.asin(s) * 180 / Math.PI;
+  }
+
+  /* ==================================================================
+     6. Balance (barras)
+     ================================================================== */
+  function drawBalance(st) {
+    const svg = document.getElementById("svgBal");
+    clearSvg(svg);
+    const W = 800, H = 250;
+    const box = {x0: 132, x1: W - 20, y0: 26, y1: H - 40};
+
+    const rows = [
+      {name: "inicio", zg: st.zg0, f: st.f00, ze: st.ze0, alpha: 0.42},
+      {name: "ahora",  zg: st.zg,  f: st.f,   ze: st.ze,  alpha: 1.0}
+    ];
+    let vmax = 0;
+    rows.forEach(r => { vmax = Math.max(vmax, Math.abs(r.zg) + Math.abs(r.f) + Math.abs(r.ze), Math.abs(r.zg + r.f + r.ze)); });
+    vmax = Math.max(vmax, 1e-6) * 1.12;
+    const lo = Math.min(0, -0.35 * vmax);
+
+    const fr = drawFrame(svg, box, [lo * 1e5, vmax * 1e5], [0, 1],
+      "×10⁻⁵ s⁻¹", "", {nyt: 1, yTicks: [], nxt: 8});
+
+    const bandH = (box.y1 - box.y0) / 2;
+    rows.forEach((r, ri) => {
+      const yc = box.y0 + bandH * (ri + 0.5);
+      const hgt = 26;
+      // apilado desde cero, en el orden ζ_g, f, ζ_e
+      let acc = 0;
+      const parts = [
+        {v: r.zg, c: COL.Z, lab: "\u03b6g"},
+        {v: r.f,  c: COL.F, lab: "f"},
+        {v: r.ze, c: COL.S, lab: "\u03b6e"}
+      ];
+      parts.forEach(pt => {
+        const a = acc, b = acc + pt.v;
+        acc = b;
+        const xa = fr.xScale(a * 1e5), xb = fr.xScale(b * 1e5);
+        const x = Math.min(xa, xb), w = Math.abs(xb - xa);
+        if (w < 0.4) return;
+        svg.appendChild(svgEl("rect", {x, y: yc - hgt / 2, width: w, height: hgt,
+          fill: pt.c, "fill-opacity": r.alpha, stroke: "#fff", "stroke-width": 1}));
+        if (w > 24) {
+          const t = svgEl("text", {x: x + w / 2, y: yc + 4.5,
+            fill: "#fff", "text-anchor": "middle",
+            style: "font-size:12px;font-weight:700;font-family:system-ui,sans-serif"});
+          t.textContent = pt.lab; svg.appendChild(t);
+        }
+      });
+      const nm = svgEl("text", {x: box.x0 - 10, y: yc + 4, class: "axis-label", "text-anchor": "end"});
+      nm.textContent = r.name; svg.appendChild(nm);
+      const tot = svgEl("text", {x: box.x0 - 10, y: yc + 17, class: "tick-label", "text-anchor": "end"});
+      tot.textContent = "q = " + ((r.zg + r.f + r.ze) * 1e5).toFixed(2);
+      svg.appendChild(tot);
+    });
+
+    // línea de q
+    const qx = fr.xScale(st.q * 1e5);
+    svg.appendChild(svgEl("line", {x1: qx, x2: qx, y1: box.y0 - 6, y2: box.y1,
+      stroke: COL.Q, "stroke-width": 2.5}));
+    const qt = svgEl("text", {x: qx, y: box.y0 - 10, class: "big-lbl", fill: COL.Q, "text-anchor": "middle"});
+    qt.textContent = `q = ${(st.q * 1e5).toFixed(2)}`;
+    svg.appendChild(qt);
+    svg.appendChild(svgEl("line", {x1: fr.xScale(0), x2: fr.xScale(0), y1: box.y0, y2: box.y1, class: "zero-line"}));
+
+    document.getElementById("legBal").innerHTML = legendHTML([
+      {name: "ζ<sub>g</sub> · vorticidad relativa", color: COL.Z},
+      {name: "f · vorticidad planetaria", color: COL.F},
+      {name: "ζ<sub>e</sub> · vorticidad de estiramiento", color: COL.S},
+      {name: "q (conservado)", color: COL.Q}
+    ]);
+  }
+
+  /* ==================================================================
+     7. Vista lateral de la columna
+     ================================================================== */
+  function drawSide(p, E, st) {
+    const svg = document.getElementById("svgSide");
+    clearSvg(svg);
+    const W = 800, H = 330;
+    const box = {x0: 62, x1: W - 22, y0: 22, y1: H - 40};
+
+    const alongX = p.cut === "x";
+    const AMAX = alongX ? 3000 : 2000;                 // km
+    const N = 241;
+    const coord = [], sArr = [];
+    for (let i = 0; i < N; i++) {
+      const c = -AMAX + 2 * AMAX * i / (N - 1);        // km
+      coord.push(c);
+      const xx = alongX ? c * 1000 : st.x;
+      const yy = alongX ? st.y : c * 1000;
+      // el perfil ambiental sólo tiene sentido en el cierre "ambiente";
+      // en los otros el espesor no depende de la posición horizontal salvo por f
+      let sv;
+      if (p.closure === "amb") sv = E.s(xx, yy);
+      else sv = state(p, E, xx, yy).s;
+      sArr.push(sv);
+    }
+    const href = p.href;
+    let pmin = 1e9, pmax = -1e9;
+    const pt = [], pb = [];
+    for (let i = 0; i < N; i++) {
+      const h = href * sArr[i];
+      pt.push(PMID - h / 2); pb.push(PMID + h / 2);
+      pmin = Math.min(pmin, pt[i]); pmax = Math.max(pmax, pb[i]);
+    }
+    const pad = Math.max(30, (pmax - pmin) * 0.22);
+    const fr = drawFrame(svg, box, [-AMAX, AMAX], [pmax + pad, pmin - pad],
+      alongX ? "x [km]  (→ este)" : "y [km]  (→ norte)", "presión [hPa]", {nxt: 7, nyt: 5});
+
+    // capa sombreada entre isentropas
+    let dArea = "M";
+    for (let i = 0; i < N; i++) dArea += `${fr.xScale(coord[i]).toFixed(1)},${fr.yScale(pt[i]).toFixed(1)} ` + (i === 0 ? "L" : "");
+    for (let i = N - 1; i >= 0; i--) dArea += `L${fr.xScale(coord[i]).toFixed(1)},${fr.yScale(pb[i]).toFixed(1)} `;
+    dArea += "Z";
+    svg.appendChild(svgEl("path", {d: dArea, fill: cssVarSafe("--series-2", "#eb6834"), "fill-opacity": 0.10}));
+
+    // isentropas
+    svg.appendChild(svgEl("path", {d: pathOf(fr.xScale, fr.yScale, coord, pt),
+      class: "series-path", stroke: COL.S, "stroke-width": 2.4}));
+    svg.appendChild(svgEl("path", {d: pathOf(fr.xScale, fr.yScale, coord, pb),
+      class: "series-path", stroke: COL.S, "stroke-width": 2.4}));
+    const lt = svgEl("text", {x: box.x0 + 6, y: fr.yScale(pt[0]) - 6, class: "inline-lbl", fill: COL.S});
+    lt.textContent = "θ₂ (isentropa superior)"; svg.appendChild(lt);
+    const lb = svgEl("text", {x: box.x0 + 6, y: fr.yScale(pb[0]) + 14, class: "inline-lbl", fill: COL.S});
+    lb.textContent = "θ₁ (isentropa inferior)"; svg.appendChild(lb);
+
+    // columna fantasma en el punto de partida
+    const c0 = 0;
+    const h0 = href * st.s0;
+    const wCol = 34;
+    const gx0 = fr.xScale(c0);
+    svg.appendChild(svgEl("rect", {x: gx0 - wCol / 2, y: fr.yScale(PMID - h0 / 2),
+      width: wCol, height: Math.abs(fr.yScale(PMID + h0 / 2) - fr.yScale(PMID - h0 / 2)),
+      fill: "none", stroke: "#555", "stroke-width": 1.4, "stroke-dasharray": "5 4"}));
+    const g0t = svgEl("text", {x: gx0, y: fr.yScale(PMID + h0 / 2) + 14, class: "inline-lbl",
+      fill: "#555", "text-anchor": "middle"});
+    g0t.textContent = `inicio · ${h0.toFixed(0)} hPa`; svg.appendChild(g0t);
+
+    // columna actual
+    const cNow = alongX ? st.x / 1000 : st.y / 1000;
+    const hNow = href * st.s;
+    const gxN = fr.xScale(cNow);
+    const yTop = fr.yScale(PMID - hNow / 2), yBot = fr.yScale(PMID + hNow / 2);
+    const colr = st.zg >= 0 ? COL.high : COL.low;
+    svg.appendChild(svgEl("rect", {x: gxN - wCol / 2, y: Math.min(yTop, yBot),
+      width: wCol, height: Math.abs(yBot - yTop),
+      fill: colr, "fill-opacity": 0.22, stroke: colr, "stroke-width": 2.4}));
+    // flechas de estiramiento/compresión
+    const stretched = st.s > st.s0 + 1e-4, squashed = st.s < st.s0 - 1e-4;
+    if (stretched || squashed) {
+      const dir = stretched ? 1 : -1;
+      [[yTop, -1], [yBot, +1]].forEach(([yy, sgn]) => {
+        const L = 16 * dir * sgn;
+        const x = gxN + wCol / 2 + 10;
+        svg.appendChild(svgEl("line", {x1: x, x2: x, y1: yy, y2: yy + L,
+          stroke: colr, "stroke-width": 2, "marker-end": "none"}));
+        const tipY = yy + L;
+        const s2 = Math.sign(L) || 1;
+        svg.appendChild(svgEl("path", {
+          d: `M${x},${tipY} L${x - 4},${tipY - 5 * s2} L${x + 4},${tipY - 5 * s2} Z`, fill: colr}));
+      });
+    }
+    const glyph = vortexGlyph(gxN, (yTop + yBot) / 2, st.zg, E.f0, 15);
+    svg.appendChild(glyph.g);
+
+    const ln = svgEl("text", {x: gxN, y: Math.max(box.y0 + 12, Math.min(yTop, yBot) - 22), class: "big-lbl",
+      fill: colr, "text-anchor": "middle"});
+    ln.textContent = `${hNow.toFixed(0)} hPa  (${signed((st.s / st.s0 - 1) * 100, 1)} %)`;
+    svg.appendChild(ln);
+
+    // hover
+    const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0,
+      height: box.y1 - box.y0, fill: "transparent", style: "cursor:crosshair"});
+    svg.appendChild(rect);
+    rect.addEventListener("mousemove", evt => {
+      const ptb = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+      const px = (evt.clientX - ptb.left) / ptb.width * vb.width;
+      const i = Math.max(0, Math.min(N - 1, Math.round((px - box.x0) / (box.x1 - box.x0) * (N - 1))));
+      showTip(evt, `<div style="font-weight:700;margin-bottom:3px">${alongX ? "x" : "y"} = ${fmt(coord[i], 0)} km</div>` +
+        `<div class="row"><span>espesor</span><b>${(href * sArr[i]).toFixed(0)} hPa</b></div>` +
+        `<div class="row"><span>s</span><b>${(sArr[i] * 100).toFixed(1)} %</b></div>` +
+        `<div class="row"><span>ζ<sub>e</sub></span><b>${(-E.f0 * (sArr[i] - 1) * 1e5).toFixed(2)} ×10⁻⁵ s⁻¹</b></div>`);
+    });
+    rect.addEventListener("mouseleave", hideTip);
+
+    document.getElementById("legSide").innerHTML = legendHTML([
+      {name: "isentropas que encierran la columna", color: COL.S},
+      {name: "columna en el punto de partida", color: "#555", dash: true},
+      {name: "columna ahora", color: colr}
+    ]);
+
+    const pctT = (st.s / st.s0 - 1) * 100;
+    document.getElementById("sideNote").innerHTML =
+      `La columna está encerrada entre dos superficies isentrópicas. Su espesor en presión mide directamente el ` +
+      `término de estiramiento: <span class="mono">&zeta;<sub>e</sub> = −f₀(s − 1)</span> con ` +
+      `<span class="mono">s = Δp/Δp<sub>ref</sub></span>. ` +
+      (Math.abs(pctT) < 0.5
+        ? `Ahora mismo la columna <b>no ha cambiado de espesor</b>.`
+        : `Ahora está <b>${pctT > 0 ? "estirada" : "comprimida"} un ${Math.abs(pctT).toFixed(1)} %</b> respecto del ` +
+          `punto de partida, y por eso su vorticidad absoluta ` +
+          `<b>${pctT > 0 ? "aumentó" : "disminuyó"}</b> en magnitud.`) +
+      (p.closure === "amb"
+        ? ` El perfil de fondo es el <b>ambiente prescrito</b>: la columna simplemente lo recorre.`
+        : ` En este cierre el ambiente se ignora; el espesor lo dicta la conservación de q.`);
+  }
+
+  /* ==================================================================
+     8. Evolución a lo largo del recorrido
+     ================================================================== */
+  function drawEvolution(st) {
+    const svg = document.getElementById("svgEvo");
+    clearSvg(svg);
+    const W = 800, H = 250;
+    const box = {x0: 70, x1: W - 16, y0: 16, y1: H - 40};
+
+    const pts = trail.length ? trail : [{zg: st.zg0, f: st.f00, ze: st.ze0, q: st.q0}];
+    const n = pts.length;
+    const idx = [], dzg = [], df = [], dze = [], dq = [];
+    for (let i = 0; i < n; i++) {
+      idx.push(i);
+      dzg.push((pts[i].zg - st.zg0) * 1e5);
+      df.push((pts[i].f - st.f00) * 1e5);
+      dze.push((pts[i].ze - st.ze0) * 1e5);
+      dq.push((pts[i].q - st.q0) * 1e5);
+    }
+    let vmax = 1e-6;
+    [dzg, df, dze].forEach(a => a.forEach(v => vmax = Math.max(vmax, Math.abs(v))));
+    vmax *= 1.15;
+    const fr = drawFrame(svg, box, [0, Math.max(1, n - 1)], [-vmax, vmax],
+      "paso del recorrido", "×10⁻⁵ s⁻¹", {nyt: 4, nxt: 8, xFmt: v => fmt(v, 0)});
+    svg.appendChild(svgEl("line", {x1: box.x0, x2: box.x1, y1: fr.yScale(0), y2: fr.yScale(0), class: "zero-line"}));
+
+    const series = [
+      {name: "Δζ<sub>g</sub>", values: dzg, color: COL.Z},
+      {name: "Δf", values: df, color: COL.F},
+      {name: "Δζ<sub>e</sub>", values: dze, color: COL.S},
+      {name: "Δq (debe ser 0)", values: dq, color: COL.Q, width: 3}
+    ];
+    series.forEach(s => {
+      if (n === 1) {
+        svg.appendChild(svgEl("circle", {cx: fr.xScale(0), cy: fr.yScale(s.values[0]),
+          r: 4, fill: s.color}));
+      } else {
+        svg.appendChild(svgEl("path", {d: pathOf(fr.xScale, fr.yScale, idx, s.values),
+          class: "series-path", stroke: s.color, "stroke-width": s.width || 2}));
+      }
+    });
+
+    document.getElementById("legEvo").innerHTML = legendHTML(series.map(s => ({name: s.name, color: s.color})));
+
+    // hover
+    const rect = svgEl("rect", {x: box.x0, y: box.y0, width: box.x1 - box.x0,
+      height: box.y1 - box.y0, fill: "transparent", style: "cursor:crosshair"});
+    svg.appendChild(rect);
+    rect.addEventListener("mousemove", evt => {
+      if (n < 2) return;
+      const ptb = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+      const px = (evt.clientX - ptb.left) / ptb.width * vb.width;
+      const i = Math.max(0, Math.min(n - 1, Math.round((px - box.x0) / (box.x1 - box.x0) * (n - 1))));
+      let html = `<div style="font-weight:700;margin-bottom:4px">paso ${i}</div>`;
+      series.forEach(s => {
+        html += `<div class="row"><span><i style="background:${s.color}"></i>${s.name}</span><b>${s.values[i].toFixed(2)}</b></div>`;
+      });
+      showTip(evt, html);
+    });
+    rect.addEventListener("mouseleave", hideTip);
+  }
+
+  /* ==================================================================
+     9. Tabla
+     ================================================================== */
+  function buildTable(p, E, st) {
+    const u = v => (v * 1e5).toFixed(2);
+    const rows = [
+      ["ζg — vorticidad relativa", u(st.zg0), u(st.zg), signed((st.zg - st.zg0) * 1e5)],
+      ["f — vorticidad planetaria", u(st.f00), u(st.f), signed((st.f - st.f00) * 1e5)],
+      ["ζe — vorticidad de estiramiento", u(st.ze0), u(st.ze), signed((st.ze - st.ze0) * 1e5)]
+    ];
+    let html = `<table class="data"><thead><tr><th>Componente de q  [×10⁻⁵ s⁻¹]</th><th>inicio</th><th>ahora</th><th>cambio</th></tr></thead><tbody>`;
+    rows.forEach(r => { html += "<tr>" + r.map(c => `<td>${c}</td>`).join("") + "</tr>"; });
+    html += `<tr class="total"><td>q = suma</td><td>${u(st.q0)}</td><td>${u(st.q)}</td><td>${signed((st.q - st.q0) * 1e5)}</td></tr>`;
+    html += "</tbody></table>";
+    const lat0 = latOf(st.f00, E), lat1 = latOf(st.f, E);
+    html += `<table class="data"><thead><tr><th>La columna</th><th>inicio</th><th>ahora</th><th>cambio</th></tr></thead><tbody>` +
+      `<tr><td>posición (x, y) [km]</td><td>0, 0</td><td>${fmt(st.x / 1000, 0)}, ${fmt(st.y / 1000, 0)}</td><td>—</td></tr>` +
+      `<tr><td>latitud</td><td>${isFinite(lat0) ? lat0.toFixed(1) + "°" : "—"}</td><td>${isFinite(lat1) ? lat1.toFixed(1) + "°" : "—"}</td><td>${isFinite(lat0) && isFinite(lat1) ? signed(lat1 - lat0, 1) + "°" : "—"}</td></tr>` +
+      `<tr><td>espesor Δp [hPa]</td><td>${(p.href * st.s0).toFixed(0)}</td><td>${(p.href * st.s).toFixed(0)}</td><td>${signed(p.href * (st.s - st.s0), 0)}</td></tr>` +
+      `<tr><td>s = Δp/Δp_ref</td><td>${(st.s0 * 100).toFixed(1)} %</td><td>${(st.s * 100).toFixed(1)} %</td><td>${signed((st.s - st.s0) * 100, 1)} %</td></tr>` +
+      `<tr class="total"><td>vorticidad absoluta ζg + f</td><td>${u(st.zg0 + st.f00)}</td><td>${u(st.zg + st.f)}</td><td>${signed((st.zg + st.f - st.zg0 - st.f00) * 1e5)}</td></tr>` +
+      `</tbody></table>`;
+    document.getElementById("tableHost").innerHTML = html;
+  }
+
+  /* ==================================================================
+     10. Render
+     ================================================================== */
+  let rafId = null;
+  function scheduleRender() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => { rafId = null; render(); });
+  }
+
+  function updateLabels(p, E, st) {
+    document.getElementById("v_zg0").textContent  = p.zg0.toFixed(2) + " ×10⁻⁵ s⁻¹";
+    document.getElementById("v_href").textContent = p.href.toFixed(0) + " hPa";
+    document.getElementById("v_f0").textContent   = p.f0.toFixed(2) + " ×10⁻⁴ s⁻¹" +
+      (isFinite(latOf(E.f0, E)) ? " (" + latOf(E.f0, E).toFixed(0) + "°)" : "");
+    document.getElementById("v_beta").textContent = p.beta.toFixed(2) + " ×10⁻¹¹";
+    document.getElementById("v_Az").textContent   = "± " + p.Az.toFixed(0) + " %";
+    document.getElementById("v_Lz").textContent   = fmt(p.Lz, 0) + " km";
+    document.getElementById("v_Am").textContent   = signed(p.Am, 1) + " %/1000 km";
+    document.getElementById("v_step").textContent = fmt(p.step, 0) + " km";
+    document.getElementById("v_px").textContent   = signed(p.px, 0) + " km";
+    document.getElementById("v_py").textContent   = signed(p.py, 0) + " km";
+    document.getElementById("v_nlev").textContent = p.nlev === 0 ? "sin contornos" : p.nlev;
+    const amb = p.closure === "amb";
+    ["Az", "Lz", "Am"].forEach(id => {
+      els[id].disabled = !amb;
+      els[id].parentElement.style.opacity = amb ? 1 : 0.45;
+    });
+  }
+
+  function pushTrail(st) {
+    const last = trail[trail.length - 1];
+    if (!last || Math.hypot(st.x - last.x, st.y - last.y) > 25e3) {
+      trail.push({x: st.x, y: st.y, zg: st.zg, f: st.f, ze: st.ze, q: st.q});
+      if (trail.length > 500) trail.shift();
+    } else if (last) {
+      trail[trail.length - 1] = {x: st.x, y: st.y, zg: st.zg, f: st.f, ze: st.ze, q: st.q};
+    }
+  }
+
+  function render() {
+    refreshColors();
+    const p = readParams();
+    const E = env(p);
+    const st = state(p, E, p.px * 1000, p.py * 1000);
+    updateLabels(p, E, st);
+    pushTrail(st);
+
+    /* ---- avisos ---- */
+    const warns = [];
+    if (Math.abs(st.zg) > 0.6 * Math.abs(E.f0))
+      warns.push(`|ζ_g| = ${(Math.abs(st.zg) * 1e5).toFixed(1)}×10⁻⁵ s⁻¹ supera 0.6·|f₀|: el número de Rossby es ` +
+                 `demasiado grande y la aproximación cuasi-geostrófica ya no es válida. Sirve para ver la tendencia, no como número.`);
+    if (st.s < 0.35 || st.s > 1.8)
+      warns.push(`El espesor de la columna quedó en ${(st.s * 100).toFixed(0)} % del de referencia: fuera del rango de ` +
+                 `validez de la linealización (que supone anomalías pequeñas).`);
+    document.getElementById("warnHost").innerHTML =
+      warns.map(w => `<div class="warnbox">⚠ ${w}</div>`).join("");
+
+    /* ---- barra de diagnóstico ---- */
+    const dzg = (st.zg - st.zg0) * 1e5, df = (st.f - st.f00) * 1e5, dze = (st.ze - st.ze0) * 1e5;
+    const dist = Math.hypot(st.x, st.y) / 1000;
+    let verdict, vclass;
+    const spinFixed = p.closure === "spin";
+    if (dist < 20) { verdict = "en el punto de partida"; vclass = "none"; }
+    else if (spinFixed) {
+      verdict = Math.abs(dze) < 0.05 ? "el estiramiento no cambió"
+              : (dze > 0 ? "ζ<sub>e</sub> aumentó: la columna se <b>comprimió</b>"
+                         : "ζ<sub>e</sub> disminuyó: la columna se <b>estiró</b>");
+      vclass = Math.abs(dze) < 0.05 ? "none" : (dze > 0 ? "up" : "down");
+    }
+    else if (Math.abs(dzg) < 0.05) {
+      verdict = p.closure === "amb"
+        ? "ζ<sub>g</sub> no cambió: se movió por un contorno de q del ambiente"
+        : "ζ<sub>g</sub> no cambió: no cambió de latitud";
+      vclass = "none";
+    }
+    else if (dzg > 0) { verdict = "ζ<sub>g</sub> aumentó (giro más antihorario)"; vclass = "up"; }
+    else { verdict = "ζ<sub>g</sub> disminuyó (giro más horario)"; vclass = "down"; }
+
+    const dirs = [];
+    if (st.y > 20e3) dirs.push("norte"); else if (st.y < -20e3) dirs.push("sur");
+    if (st.x > 20e3) dirs.push("este"); else if (st.x < -20e3) dirs.push("oeste");
+
+    document.getElementById("infoStrip").innerHTML =
+      `Desplazamiento: <b>${fmt(dist, 0)} km</b>${dirs.length ? " hacia el <b>" + dirs.join("–") + "</b>" : ""}` +
+      ` &nbsp;·&nbsp; <span style="color:${COL.Z}">Δζ<sub>g</sub> = <b>${signed(dzg)}</b></span>` +
+      ` &nbsp;·&nbsp; <span style="color:${COL.F}">Δf = <b>${signed(df)}</b></span>` +
+      ` &nbsp;·&nbsp; <span style="color:${COL.S}">Δζ<sub>e</sub> = <b>${signed(dze)}</b></span>` +
+      ` &nbsp;·&nbsp; suma = <b>${signed(dzg + df + dze)}</b> ×10⁻⁵ s⁻¹` +
+      ` &nbsp;·&nbsp; <span class="verdict ${vclass}">${verdict}</span>`;
+
+    /* ---- lecturas rápidas ---- */
+    const cyc = (st.zg * E.f0) > 0;
+    document.getElementById("readouts").innerHTML =
+      `<b>Ahora</b><br>` +
+      `ζ<sub>g</sub> = <b>${(st.zg * 1e5).toFixed(2)}</b> ×10⁻⁵ s⁻¹ (${cyc ? "ciclónica" : "anticiclónica"})<br>` +
+      `f = <b>${(st.f * 1e5).toFixed(2)}</b><br>` +
+      `ζ<sub>e</sub> = <b>${(st.ze * 1e5).toFixed(2)}</b><br>` +
+      `q = <b>${(st.q * 1e5).toFixed(2)}</b> (constante)<br><br>` +
+      `espesor = <b>${(p.href * st.s).toFixed(0)} hPa</b><br>` +
+      `s = <b>${(st.s * 100).toFixed(1)} %</b> ` +
+      `<span style="color:${st.s > st.s0 ? COL.high : st.s < st.s0 ? COL.low : COL.Z}">` +
+      `${st.s > st.s0 + 1e-4 ? "(estirada)" : st.s < st.s0 - 1e-4 ? "(comprimida)" : ""}</span><br>` +
+      `ζ<sub>g</sub> + f = <b>${((st.zg + st.f) * 1e5).toFixed(2)}</b><br><br>` +
+      `puntos del rastro: ${trail.length}`;
+
+    document.getElementById("mapNote").innerHTML =
+      `El sombreado es el <b>q del ambiente</b> (f + ζ_e), es decir el paisaje de vorticidad potencial que la ` +
+      `columna recorre; las líneas grises son sus contornos. Como <span class="mono">q</span> de la columna se ` +
+      `conserva, su <b>vorticidad relativa es el residuo</b>: ` +
+      `<span class="mono">ζ_g = q − q<sub>ambiente</sub>(x, y)</span>. ` +
+      `Por eso, si la mueves <b>a lo largo de un contorno</b> (la línea violeta discontinua), ` +
+      `<span class="mono">ζ_g</span> no cambia — es la condición ` +
+      `<span class="mono"><b>V</b><sub>g</sub>·∇q = 0</span> de Holton. El tamaño del círculo y la flecha indican ` +
+      `la magnitud y el sentido del giro.` +
+      (p.closure !== "amb"
+        ? ` <b>Ojo:</b> en el cierre elegido el ambiente no se usa; sólo cuenta el cambio de latitud.`
+        : "");
+
+    drawMap(p, E, st);
+    drawBalance(st);
+    drawSide(p, E, st);
+    drawEvolution(st);
+    buildTable(p, E, st);
+  }
+
+  /* ==================================================================
+     11. Eventos
+     ================================================================== */
+  function moveTo(d) {
+    els.px.value = Math.max(-3000, Math.min(3000, Math.round(d.x / 10) * 10));
+    els.py.value = Math.max(-2000, Math.min(2000, Math.round(d.y / 10) * 10));
+    scheduleRender();
+  }
+  window.addEventListener("mouseup", () => { dragging = false; });
+  window.addEventListener("mousemove", evt => { if (dragging) moveTo(mapToData(evt)); });
+
+  IDS.forEach(id => els[id].addEventListener("input", () => {
+    if (id !== "px" && id !== "py" && id !== "nlev" && id !== "step") trail = [];
+    markPreset(null); scheduleRender();
+  }));
+  document.querySelectorAll('input[name="closure"], input[name="shade"], input[name="cut"]').forEach(r =>
+    r.addEventListener("change", () => {
+      if (r.name === "closure") trail = [];
+      markPreset(null); scheduleRender();
+    }));
+
+  document.querySelectorAll("button[data-move]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const stp = parseFloat(els.step.value);
+      const m = btn.dataset.move;
+      if (m === "H") { els.px.value = 0; els.py.value = 0; trail = []; }
+      if (m === "N") els.py.value = Math.min(2000, parseFloat(els.py.value) + stp);
+      if (m === "S") els.py.value = Math.max(-2000, parseFloat(els.py.value) - stp);
+      if (m === "E") els.px.value = Math.min(3000, parseFloat(els.px.value) + stp);
+      if (m === "W") els.px.value = Math.max(-3000, parseFloat(els.px.value) - stp);
+      markPreset(null); render();
+    });
+  });
+
+  document.getElementById("svgMap").addEventListener("keydown", evt => {
+    const stp = parseFloat(els.step.value);
+    let used = true;
+    if (evt.key === "ArrowUp")    els.py.value = Math.min(2000, parseFloat(els.py.value) + stp);
+    else if (evt.key === "ArrowDown")  els.py.value = Math.max(-2000, parseFloat(els.py.value) - stp);
+    else if (evt.key === "ArrowRight") els.px.value = Math.min(3000, parseFloat(els.px.value) + stp);
+    else if (evt.key === "ArrowLeft")  els.px.value = Math.max(-3000, parseFloat(els.px.value) - stp);
+    else used = false;
+    if (used) { evt.preventDefault(); markPreset(null); render(); }
+  });
+
+  document.getElementById("clearTrail").addEventListener("click", () => { trail = []; render(); });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    loadDefaults(); markPreset(null); render();
+  });
+  document.querySelectorAll("button[data-preset]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      loadDefaults();
+      const pr = PRESETS[btn.dataset.preset];
+      applyParams(pr);
+      if (btn.dataset.preset === "plano") setRadio("closure", "amb");
+      trail = [];
+      buildTrailTo(pr.px || 0, pr.py || 0);
+      markPreset(btn.dataset.preset);
+      render();
+    });
+  });
+
+  // construye un recorrido recto desde el origen hasta (xk, yk) [km] para poblar la evolución
+  function buildTrailTo(xk, yk) {
+    const p = readParams(), E = env(p);
+    const N = 40;
+    trail = [];
+    for (let i = 0; i <= N; i++) {
+      const st = state(p, E, xk * 1000 * i / N, yk * 1000 * i / N);
+      trail.push({x: st.x, y: st.y, zg: st.zg, f: st.f, ze: st.ze, q: st.q});
+    }
+  }
+  function markPreset(name) {
+    document.querySelectorAll("button[data-preset]").forEach(b =>
+      b.classList.toggle("active", name !== null && b.dataset.preset === name));
+  }
+
+  loadDefaults();
+  render();
+})();
+</script>
+</body>
+</html>

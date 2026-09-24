@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Velocidad de fase y velocidad de grupo — Dinámica II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F5; --panel:#FFFFFF; --ink:#18222C; --muted:#5A6774; --rule:#D3DAE0;
+  --phase:#0B7A78; --group:#A51D4C; --ghost:#9AA6B1; --chip:#E7ECEF;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161B; --panel:#172027; --ink:#E3E9ED; --muted:#94A2AE; --rule:#2B3841;
+    --phase:#3CC7C1; --group:#F07CA6; --ghost:#5C6B77; --chip:#212D35;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161B; --panel:#172027; --ink:#E3E9ED; --muted:#94A2AE; --rule:#2B3841;
+  --phase:#3CC7C1; --group:#F07CA6; --ghost:#5C6B77; --chip:#212D35;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+header h1{font-size:clamp(1.6rem,3.2vw,2.3rem);line-height:1.15;margin:0 0 .35em;font-weight:600;letter-spacing:-.01em}
+header p{margin:0;max-width:70ch;color:var(--muted)}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;margin-top:24px}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+aside,.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+aside{padding:18px;font-family:var(--sans);font-size:.88rem;align-self:start}
+aside h2{font-family:var(--serif);font-size:1.05rem;margin:0 0 .5em;font-weight:600}
+aside section+section{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.chips button,.btns button{font:inherit;font-size:.84rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:5px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.seg button:focus-visible,.chips button:focus-visible,.btns button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--phase);outline-offset:2px}
+.formula{font-family:var(--serif);font-size:1.02rem;margin:.6em 0 0;padding:6px 10px;background:var(--bg);border-radius:6px}
+.ctrl{margin-top:12px}
+.ctrl label{display:flex;justify-content:space-between;gap:8px}
+.ctrl output{font-variant-numeric:tabular-nums;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--phase)}
+.chips{display:flex;flex-direction:column;gap:6px}
+.chips button{text-align:left}
+.btns{display:flex;gap:6px;margin-top:10px}
+main{display:flex;flex-direction:column;gap:22px;min-width:0}
+.panel{padding:16px 18px}
+.panel h2{font-size:1.1rem;margin:0 0 .2em;font-weight:600}
+.panel .sub{margin:0 0 .6em;color:var(--muted);font-size:.93rem}
+canvas{display:block;width:100%}
+#cWave{height:280px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:1000px){.pair{grid-template-columns:1fr}}
+#cDisp,#cHov{height:320px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--sans);font-size:.82rem;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:18px;height:0;border-top:2px solid currentColor;vertical-align:middle;margin-right:6px}
+.lg-ink{color:var(--ink)} .lg-phase{color:var(--phase)} .lg-group{color:var(--group)}
+.lg-dash::before{border-top-style:dashed!important}
+.lg-ghost{color:var(--ghost)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;border-bottom:1px solid var(--rule);text-align:left}
+td.num{text-align:right}
+th{font-weight:500;color:var(--muted)}
+.note{font-family:var(--sans);font-size:.84rem;color:var(--muted);margin:.8em 0 0}
+.note.warn{color:var(--group)}
+details{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:0 18px}
+details+details{margin-top:10px}
+summary{cursor:pointer;padding:12px 0;font-weight:600}
+details .body{padding-bottom:14px;max-width:78ch}
+.eq{display:block;margin:.7em 0;padding:8px 12px;background:var(--bg);border-radius:6px;overflow-x:auto;white-space:nowrap}
+.cp{color:var(--phase);font-weight:600} .cg{color:var(--group);font-weight:600}
+.docs{margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Ondas dispersivas y no dispersivas: velocidad de fase y velocidad de grupo</h1>
+  <p>Las crestas viajan con la velocidad de fase <span class="cp">c<sub>p</sub> = ω/k</span>; la envolvente, y con ella la energía, viaja con la velocidad de grupo <span class="cg">c<sub>g</sub> = dω/dk</span>. Sólo coinciden cuando ω es proporcional a k.</p>
+</header>
+
+<div class="layout">
+<aside>
+  <section>
+    <h2>Relación de dispersión</h2>
+    <div class="seg" id="relBtns" role="group" aria-label="Relación de dispersión"></div>
+    <div class="formula" id="relFormula"></div>
+    <div id="relParams"></div>
+  </section>
+  <section>
+    <h2>Señal</h2>
+    <div class="seg" id="modeBtns" role="group" aria-label="Tipo de señal">
+      <button data-mode="dos" aria-pressed="true">Dos ondas</button>
+      <button data-mode="paquete" aria-pressed="false">Paquete</button>
+    </div>
+    <div class="ctrl"><label for="k0">Número de onda central k₀ <output id="k0o"></output></label>
+      <input type="range" id="k0" min="0.3" max="3.1" step="0.01" value="1"></div>
+    <div class="ctrl"><label for="dk"><span id="dkLabel">Separación Δk</span> <output id="dko"></output></label>
+      <input type="range" id="dk" min="0.08" max="0.5" step="0.01" value="0.25"></div>
+  </section>
+  <section>
+    <h2>Animación</h2>
+    <div class="ctrl"><label for="spd">Rapidez <output id="spdo"></output></label>
+      <input type="range" id="spd" min="0.5" max="5" step="0.1" value="2"></div>
+    <div class="btns"><button id="play">Pausar</button><button id="reset">Reiniciar</button></div>
+  </section>
+  <section>
+    <h2>Experimentos</h2>
+    <div class="chips" id="exps"></div>
+  </section>
+</aside>
+
+<main>
+  <div class="panel">
+    <h2>La onda en el espacio</h2>
+    <p class="sub">Siga con la vista el círculo (una cresta) y el triángulo (el máximo de la envolvente).</p>
+    <canvas id="cWave" aria-label="Animación de la onda"></canvas>
+    <div class="legend">
+      <span class="lg-ink">η(x,t)</span>
+      <span class="lg-group lg-dash">envolvente</span>
+      <span class="lg-ghost" id="lgGhost">envolvente inicial</span>
+      <span class="lg-phase">cresta, se mueve con c<sub>p</sub></span>
+      <span class="lg-group">grupo, se mueve con c<sub>g</sub></span>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="panel">
+      <h2>Relación de dispersión ω(k)</h2>
+      <p class="sub">c<sub>p</sub> es la pendiente de la cuerda desde el origen; c<sub>g</sub> es la pendiente de la tangente.</p>
+      <canvas id="cDisp" aria-label="Gráfico de la relación de dispersión"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Diagrama de Hovmöller x–t</h2>
+      <p class="sub">Crestas oscuras. Las rectas tienen pendiente c<sub>p</sub> y c<sub>g</sub>; el tiempo crece hacia abajo.</p>
+      <canvas id="cHov" aria-label="Diagrama de Hovmöller"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Valores</h2>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <p class="note" id="msg"></p>
+  </div>
+</main>
+</div>
+
+<div class="docs">
+<details>
+  <summary>Dos ondas casi iguales: de dónde salen c<sub>p</sub> y c<sub>g</sub></summary>
+  <div class="body">
+    <p>Sumamos dos ondas de igual amplitud con números de onda k₁ = k̄ − Δk/2 y k₂ = k̄ + Δk/2, cuyas frecuencias las fija la relación de dispersión, ω₁ = ω(k₁) y ω₂ = ω(k₂):</p>
+    <span class="eq">η = cos(k₁x − ω₁t) + cos(k₂x − ω₂t) = 2 cos(½Δk·x − ½Δω·t) · cos(k̄x − ω̄t)</span>
+    <p>El segundo factor es la <em>portadora</em>: una onda de número de onda k̄ cuyas crestas avanzan con <span class="cp">c<sub>p</sub> = ω̄/k̄</span>. El primero es la <em>envolvente</em>, de longitud de onda 2π/Δk, que avanza con Δω/Δk. Cuando Δk → 0,</p>
+    <span class="eq">Δω/Δk → dω/dk = <span class="cg">c<sub>g</sub></span></span>
+    <p>La energía de la onda es proporcional al cuadrado de la amplitud, y la amplitud es la envolvente: por eso la energía viaja con c<sub>g</sub> y no con c<sub>p</sub>.</p>
+    <p>Si ω = ck, entonces Δω/Δk = ω̄/k̄ = c: portadora y envolvente se mueven juntas y el paquete no cambia de forma. Cualquier otra relación ω(k) hace que cada componente viaje a su propia velocidad; el paquete se <em>dispersa</em>.</p>
+  </div>
+</details>
+<details>
+  <summary>Relaciones de dispersión incluidas</summary>
+  <div class="body">
+    <div class="tablewrap"><table>
+      <tr><th>Caso</th><th>ω(k)</th><th>c<sub>p</sub></th><th>c<sub>g</sub></th></tr>
+      <tr><td>No dispersiva</td><td>c k</td><td>c</td><td>c</td></tr>
+      <tr><td>Cadena de resortes</td><td>ω₀ |sin(ka/2)|</td><td>ω₀ sin(ka/2)/k</td><td>(ω₀a/2) cos(ka/2)</td></tr>
+      <tr><td>Gravedad, agua profunda</td><td>√(g k)</td><td>√(g/k)</td><td>c<sub>p</sub>/2</td></tr>
+      <tr><td>Inercio-gravedad</td><td>√(f² + c²k²)</td><td>ω/k</td><td>c²k/ω = c²/c<sub>p</sub></td></tr>
+      <tr><td>Rossby</td><td>Uk − βk/(k² + l²)</td><td>U − β/(k² + l²)</td><td>U + β(k² − l²)/(k² + l²)²</td></tr>
+    </table></div>
+    <p>La cadena es la de la clase anterior, con ω₀ = 2√(K/m). Para ka ≪ 1 se recupera ω ≈ (ω₀a/2)k = a√(K/m)·k, es decir c² = Ka²/m, la misma rapidez del límite continuo. La dispersión aparece cuando la longitud de onda se acerca a la separación entre masas.</p>
+    <p>Las ondas de inercio-gravedad y de Rossby son las de la Unidad B (Holton, cap. 7). En inercio-gravedad, c<sub>p</sub>·c<sub>g</sub> = c²: las ondas largas tienen crestas rápidas pero transportan energía lentamente. En Rossby, c<sub>g</sub> − c<sub>p</sub> = 2βk²/(k² + l²)² &gt; 0: la energía siempre viaja al este de las crestas.</p>
+  </div>
+</details>
+<details>
+  <summary>Qué observar</summary>
+  <div class="body">
+    <ul>
+      <li><strong>No dispersiva:</strong> círculo y triángulo avanzan juntos; en modo paquete, la envolvente inicial y la actual coinciden en todo momento.</li>
+      <li><strong>Cadena de resortes:</strong> con k₀ pequeño casi no hay dispersión. Al acercar k₀ a π/a, c<sub>g</sub> → 0: las crestas avanzan pero el paquete queda detenido.</li>
+      <li><strong>Agua profunda:</strong> las crestas nacen en la cola del grupo, lo recorren y desaparecen al frente, porque c<sub>p</sub> = 2c<sub>g</sub>.</li>
+      <li><strong>Inercio-gravedad:</strong> al bajar k₀ la curva se aplana en ω = f; c<sub>p</sub> crece sin límite mientras c<sub>g</sub> → 0.</li>
+      <li><strong>Rossby con U = 0:</strong> crestas hacia el oeste y energía hacia el este. En el Hovmöller las dos rectas tienen pendientes de signo opuesto.</li>
+      <li><strong>Rossby estacionaria:</strong> con U = β/(k² + l²) las crestas quedan fijas, pero la energía se propaga aguas abajo. Es la situación de una onda forzada por la topografía.</li>
+    </ul>
+  </div>
+</details>
+<details>
+  <summary>Letra chica del modelo</summary>
+  <div class="body">
+    <p>Todas las cantidades están en unidades arbitrarias; el dominio mide L = 60. En modo <em>dos ondas</em> se usan k₀ ± Δk/2 con igual amplitud. En modo <em>paquete</em> la señal es una suma de modos k = 2πn/L con amplitudes gaussianas de ancho Δk alrededor de k₀. El paquete es periódico en L y reaparece por el lado opuesto. En modo dos ondas, en cambio, los marcadores saltan a la cresta o envolvente equivalente cuando salen de la ventana.</p>
+    <p>La c<sub>g</sub> medida se obtiene siguiendo numéricamente el máximo de |envolvente| durante la mitad del tiempo del Hovmöller y ajustando una recta. En modo dos ondas debe coincidir con Δω/Δk; en modo paquete, con dω/dk mientras la envolvente mantenga su forma. En Rossby se usa k &gt; 0 siempre y l fijo como número de onda meridional.</p>
+  </div>
+</details>
+</div>
+</div>
+
+<script>
+(() => {
+const L = 60, X0 = 0.3 * L, TH = 40;
+
+const RELS = {
+  nodisp: {
+    name: 'No dispersiva', formula: 'ω = c k',
+    params: [{id:'c', label:'c', min:0.2, max:2, step:0.05, val:1}],
+    w: (k,p) => p.c*k
+  },
+  cadena: {
+    name: 'Cadena de resortes', formula: 'ω = ω₀ |sin(ka/2)|,  ω₀ = 2√(K/m)',
+    params: [{id:'a', label:'a (separación)', min:0.3, max:1, step:0.01, val:0.8},
+             {id:'w0', label:'ω₀', min:0.5, max:3, step:0.05, val:2}],
+    w: (k,p) => p.w0*Math.abs(Math.sin(k*p.a/2))
+  },
+  profunda: {
+    name: 'Agua profunda', formula: 'ω = √(g k)',
+    params: [{id:'g', label:'g', min:0.3, max:4, step:0.05, val:1}],
+    w: (k,p) => Math.sqrt(p.g*k)
+  },
+  poincare: {
+    name: 'Inercio-gravedad', formula: 'ω = √(f² + c²k²)',
+    params: [{id:'f', label:'f', min:0, max:2, step:0.05, val:1},
+             {id:'c', label:'c = √(gH)', min:0.3, max:2, step:0.05, val:1}],
+    w: (k,p) => Math.sqrt(p.f*p.f + p.c*p.c*k*k)
+  },
+  rossby: {
+    name: 'Rossby', formula: 'ω = U k − β k/(k² + l²)',
+    params: [{id:'beta', label:'β', min:0, max:1.5, step:0.02, val:1},
+             {id:'U', label:'U', min:-0.5, max:1.5, step:0.02, val:0},
+             {id:'l', label:'l (meridional)', min:0.2, max:1.5, step:0.05, val:0.5}],
+    w: (k,p) => p.U*k - p.beta*k/(k*k + p.l*p.l)
+  }
+};
+
+const S = {
+  rel: 'nodisp', mode: 'dos', k0: 1, dk: 0.25, spd: 2, t: 0, playing: true,
+  p: Object.fromEntries(Object.entries(RELS).map(([key,r]) => [key, Object.fromEntries(r.params.map(q => [q.id, q.val]))]))
+};
+
+const EXPS = [
+  {label:'Sin dispersión: el paquete no cambia', set:{rel:'nodisp', mode:'paquete', k0:1, dk:0.3}},
+  {label:'Agua profunda: c_g = c_p/2', set:{rel:'profunda', mode:'paquete', k0:1, dk:0.25, p:{g:1}}},
+  {label:'Cadena con k₀ ≈ π/a: el grupo se detiene', set:{rel:'cadena', mode:'paquete', k0:3.05, dk:0.2, p:{a:1, w0:2}}},
+  {label:'Inercio-gravedad, onda larga', set:{rel:'poincare', mode:'dos', k0:0.4, dk:0.2, p:{f:1, c:1}}},
+  {label:'Rossby: fase al oeste, grupo al este', set:{rel:'rossby', mode:'paquete', k0:1.2, dk:0.25, p:{beta:1, U:0, l:0.5}}},
+  {label:'Rossby estacionaria: U = β/(k²+l²)', set:{rel:'rossby', mode:'paquete', k0:1, dk:0.25, p:{beta:1, U:0.8, l:0.5}}}
+];
+
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const W = k => RELS[S.rel].w(k, S.p[S.rel]);
+const dWdk = k => { const h = 1e-5; return (W(k+h) - W(k-h)) / (2*h); };
+const fmt = (v,d=3) => (Math.abs(v) < 5e-4 ? 0 : v).toFixed(d);
+
+/* ---------- modes of the signal ---------- */
+function buildModes(){
+  const out = [];
+  if (S.mode === 'dos') {
+    for (const k of [S.k0 - S.dk/2, S.k0 + S.dk/2]) out.push({k, w:W(k), A:0.5});
+    return out;
+  }
+  const d = 2*Math.PI/L, n0 = Math.round(S.k0/d), M = Math.ceil(4*S.dk/d);
+  let sum = 0;
+  for (let n = n0 - M; n <= n0 + M; n++) {
+    const k = n*d; if (k <= 0) continue;
+    const A = Math.exp(-((k - S.k0)**2) / (2*S.dk*S.dk));
+    out.push({k, w:W(k), A}); sum += A;
+  }
+  out.forEach(m => m.A /= sum);
+  return out;
+}
+function Z(ms, x, t){
+  let re = 0, im = 0;
+  for (const m of ms) { const th = m.k*(x - X0) - m.w*t; re += m.A*Math.cos(th); im += m.A*Math.sin(th); }
+  return [re, im];
+}
+function speeds(ms){
+  const cpTheo = W(S.k0)/S.k0, cg = dWdk(S.k0);
+  let cp = cpTheo, cgMark = cg, cgTwo = null;
+  if (S.mode === 'dos') {
+    cgTwo = (ms[1].w - ms[0].w) / (ms[1].k - ms[0].k);
+    cp = 0.5*(ms[0].w + ms[1].w) / S.k0;
+    cgMark = cgTwo;
+  }
+  return {cp, cpTheo, cg, cgTwo, cgMark};
+}
+/* periods used to wrap markers into the window */
+function periods(){
+  if (S.mode === 'paquete') return {Pc:L, Pg:L};
+  const lam = 2*Math.PI/S.k0, Lam = 2*Math.PI/S.dk;
+  return {Pc: lam*Math.ceil(L/lam), Pg: Lam*Math.ceil(L/Lam)};
+}
+function wrap(x, P){ const r = ((x % P) + P) % P; return r <= L ? r : null; }
+
+/* follow the envelope maximum to measure c_g */
+function measureCg(ms){
+  const N = 200, T = TH/2, dt = T/N, h = 0.02, M = 45;
+  const env = (x,t) => { const [a,b] = Z(ms,x,t); return a*a + b*b; };
+  let x = X0; const xs = [], ts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i*dt; let best = x, bv = -1;
+    for (let j = -M; j <= M; j++) { const xx = x + j*h, v = env(xx,t); if (v > bv) { bv = v; best = xx; } }
+    const a = env(best-h,t), c = env(best+h,t), den = a - 2*bv + c;
+    x = den < 0 ? best + 0.5*h*(a - c)/den : best;
+    xs.push(x); ts.push(t);
+  }
+  const n = xs.length, mt = ts.reduce((s,v)=>s+v,0)/n, mx = xs.reduce((s,v)=>s+v,0)/n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) { num += (ts[i]-mt)*(xs[i]-mx); den += (ts[i]-mt)**2; }
+  return num/den;
+}
+
+/* ---------- canvases ---------- */
+function prep(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const w = Math.max(10, Math.round(r.width)), h = Math.max(10, Math.round(r.height));
+  if (cv.width !== w*dpr || cv.height !== h*dpr) { cv.width = w*dpr; cv.height = h*dpr; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  return {ctx, w, h};
+}
+const FONT = '12px "IBM Plex Sans", system-ui, sans-serif';
+
+let MS = [], SP = null, HOV = null, CGM = null;
+
+function drawWave(){
+  const {ctx, w, h} = prep($('cWave'));
+  const ink = css('--ink'), ph = css('--phase'), gr = css('--group'), gh = css('--ghost'), rule = css('--rule'), muted = css('--muted');
+  const pad = {l:34, r:12, t:14, b:26};
+  const X = x => pad.l + (x/L)*(w - pad.l - pad.r);
+  const Y = y => pad.t + (1 - (y + 1.15)/2.3)*(h - pad.t - pad.b);
+  ctx.font = FONT; ctx.fillStyle = muted; ctx.strokeStyle = rule; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(w - pad.r, Y(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.stroke();
+  ctx.textAlign = 'center';
+  for (let x = 0; x <= L; x += 10) ctx.fillText(x, X(x), h - 8);
+  ctx.textAlign = 'right'; ctx.fillText('1', pad.l - 6, Y(1) + 4); ctx.fillText('−1', pad.l - 6, Y(-1) + 4);
+
+  const N = Math.min(900, Math.round(w*1.5)), t = S.t;
+  const re = new Float64Array(N+1), en = new Float64Array(N+1), en0 = new Float64Array(N+1);
+  for (let i = 0; i <= N; i++) {
+    const x = L*i/N, [a,b] = Z(MS, x, t); re[i] = a; en[i] = Math.hypot(a,b);
+    if (S.mode === 'paquete') { const [c,d] = Z(MS, x, 0); en0[i] = Math.hypot(c,d); }
+  }
+  const line = (arr, sign, color, width, dash) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash);
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) { const px = X(L*i/N), py = Y(sign*arr[i]); i ? ctx.lineTo(px,py) : ctx.moveTo(px,py); }
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+  if (S.mode === 'paquete') { line(en0, 1, gh, 1.2, []); line(en0, -1, gh, 1.2, []); }
+  line(en, 1, gr, 1.4, [6,4]); line(en, -1, gr, 1.4, [6,4]);
+  line(re, 1, ink, 2, []);
+
+  const {Pc, Pg} = periods();
+  const xg = wrap(X0 + SP.cgMark*t, Pg);
+  if (xg !== null) {
+    const [a,b] = Z(MS, xg, t), e = Math.hypot(a,b);
+    ctx.fillStyle = gr; ctx.beginPath();
+    ctx.moveTo(X(xg), Y(e) - 4); ctx.lineTo(X(xg) - 7, Y(e) - 16); ctx.lineTo(X(xg) + 7, Y(e) - 16); ctx.closePath(); ctx.fill();
+  }
+  const xc = wrap(X0 + SP.cp*t, Pc);
+  if (xc !== null) {
+    const [a] = Z(MS, xc, t);
+    ctx.strokeStyle = ph; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(xc), Y(0)); ctx.lineTo(X(xc), Y(a)); ctx.stroke();
+    ctx.fillStyle = ph; ctx.beginPath(); ctx.arc(X(xc), Y(a), 5.5, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = muted; ctx.textAlign = 'right'; ctx.fillText('t = ' + t.toFixed(1), w - pad.r, pad.t + 4);
+  ctx.textAlign = 'left'; ctx.fillText('x', w - pad.r - 8, Y(0) - 6);
+}
+
+function drawDisp(){
+  const {ctx, w, h} = prep($('cDisp'));
+  const ink = css('--ink'), ph = css('--phase'), gr = css('--group'), rule = css('--rule'), muted = css('--muted');
+  const pad = {l:44, r:14, t:14, b:32}, kmax = 3.3, N = 300;
+  const ks = [], ws = [];
+  for (let i = 1; i <= N; i++) { const k = kmax*i/N; ks.push(k); ws.push(W(k)); }
+  let wmin = Math.min(0, ...ws), wmax = Math.max(0, ...ws); const sp = (wmax - wmin) || 1;
+  wmin -= 0.08*sp; wmax += 0.08*sp;
+  const X = k => pad.l + (k/kmax)*(w - pad.l - pad.r);
+  const Y = v => pad.t + (1 - (v - wmin)/(wmax - wmin))*(h - pad.t - pad.b);
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b); ctx.clip();
+  ctx.strokeStyle = rule; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(w - pad.r, Y(0)); ctx.stroke();
+  if (S.rel === 'cadena') {
+    const kz = Math.PI/S.p.cadena.a;
+    if (kz < kmax) { ctx.setLineDash([3,4]); ctx.beginPath(); ctx.moveTo(X(kz), pad.t); ctx.lineTo(X(kz), h - pad.b); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = muted; ctx.font = FONT; ctx.fillText('π/a', X(kz) + 4, pad.t + 12); }
+  }
+  ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath();
+  ks.forEach((k,i) => i ? ctx.lineTo(X(k), Y(ws[i])) : ctx.moveTo(X(k), Y(ws[i]))); ctx.stroke();
+  const k0 = S.k0, w0 = W(k0), cp = w0/k0, cg = dWdk(k0);
+  ctx.strokeStyle = ph; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(1.35*k0), Y(1.35*w0)); ctx.stroke();
+  ctx.strokeStyle = gr; ctx.lineWidth = 1.6; ctx.setLineDash([6,4]); ctx.beginPath();
+  ctx.moveTo(X(k0 - 0.9), Y(w0 - 0.9*cg)); ctx.lineTo(X(k0 + 0.9), Y(w0 + 0.9*cg)); ctx.stroke(); ctx.setLineDash([]);
+  if (S.mode === 'dos') {
+    ctx.strokeStyle = gr; ctx.lineWidth = 1.5;
+    for (const m of MS) { ctx.beginPath(); ctx.arc(X(m.k), Y(m.w), 4, 0, 2*Math.PI); ctx.stroke(); }
+  }
+  ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(X(k0), Y(w0), 5, 0, 2*Math.PI); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = rule; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = FONT; ctx.textAlign = 'center';
+  for (let k = 0; k <= 3; k++) ctx.fillText(k, X(k), h - pad.b + 16);
+  ctx.fillText('k', w - pad.r - 6, h - 6);
+  ctx.textAlign = 'right';
+  const step = niceStep(wmax - wmin);
+  for (let v = Math.ceil(wmin/step)*step; v <= wmax; v += step) ctx.fillText(fmt(v, step < 1 ? 1 : 0), pad.l - 6, Y(v) + 4);
+  ctx.textAlign = 'left'; ctx.fillText('ω', pad.l + 6, pad.t + 12);
+  ctx.fillStyle = ph; ctx.fillText('pendiente c_p = ' + fmt(cp,2), pad.l + 26, pad.t + 12);
+  ctx.fillStyle = gr; ctx.fillText('pendiente c_g = ' + fmt(cg,2), pad.l + 26, pad.t + 28);
+}
+function niceStep(r){ const raw = r/5, p = 10**Math.floor(Math.log10(raw)), m = raw/p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10)*p; }
+
+function computeHov(){
+  const NX = 240, NT = 160, data = new Float32Array(NX*NT);
+  for (let j = 0; j < NT; j++) { const t = TH*j/(NT-1);
+    for (let i = 0; i < NX; i++) data[j*NX + i] = Z(MS, L*(i+0.5)/NX, t)[0]; }
+  const off = document.createElement('canvas'); off.width = NX; off.height = NT;
+  const octx = off.getContext('2d'), img = octx.createImageData(NX, NT);
+  const hex = s => { const m = s.replace('#',''); return [0,2,4].map(i => parseInt(m.substr(i,2),16)); };
+  const cl = hex(css('--panel')), cd = hex(css('--ink'));
+  for (let q = 0; q < NX*NT; q++) {
+    const a = Math.max(0, Math.min(1, 0.5 + 0.5*data[q]));
+    for (let c = 0; c < 3; c++) img.data[4*q + c] = cl[c] + (cd[c] - cl[c])*a*0.85;
+    img.data[4*q + 3] = 255;
+  }
+  octx.putImageData(img, 0, 0);
+  HOV = off;
+}
+function drawHov(){
+  const {ctx, w, h} = prep($('cHov'));
+  const ph = css('--phase'), gr = css('--group'), rule = css('--rule'), muted = css('--muted');
+  const pad = {l:40, r:12, t:10, b:30};
+  const X = x => pad.l + (x/L)*(w - pad.l - pad.r);
+  const Y = t => pad.t + (t/TH)*(h - pad.t - pad.b);
+  ctx.imageSmoothingEnabled = true;
+  if (HOV) ctx.drawImage(HOV, pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b);
+  const {Pc, Pg} = periods();
+  const path = (c, P, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.beginPath(); let prev = null;
+    for (let i = 0; i <= 400; i++) {
+      const t = TH*i/400, x = wrap(X0 + c*t, P);
+      if (x === null || (prev !== null && Math.abs(x - prev) > L/2)) { prev = x; if (x !== null) ctx.moveTo(X(x), Y(t)); continue; }
+      prev === null ? ctx.moveTo(X(x), Y(t)) : ctx.lineTo(X(x), Y(t)); prev = x;
+    }
+    ctx.stroke();
+  };
+  path(SP.cp, Pc, ph); path(SP.cgMark, Pg, gr);
+  ctx.strokeStyle = muted; ctx.setLineDash([2,3]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(S.t)); ctx.lineTo(w - pad.r, Y(S.t)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = rule; ctx.strokeRect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b);
+  ctx.fillStyle = muted; ctx.font = FONT; ctx.textAlign = 'center';
+  for (let x = 0; x <= L; x += 20) ctx.fillText(x, X(x), h - pad.b + 16);
+  ctx.fillText('x', w - pad.r - 6, h - 4);
+  ctx.textAlign = 'right';
+  for (let t = 0; t <= TH; t += 10) ctx.fillText(t, pad.l - 6, Y(t) + 4);
+  ctx.save(); ctx.translate(12, pad.t + (h - pad.t - pad.b)/2); ctx.rotate(-Math.PI/2); ctx.textAlign = 'center'; ctx.fillText('t', 0, 0); ctx.restore();
+}
+
+function updateTable(){
+  const lam = 2*Math.PI/S.k0, rows = [
+    ['Longitud de onda λ = 2π/k₀', fmt(lam,2)],
+    ['Frecuencia ω(k₀)', fmt(W(S.k0))],
+    ['Velocidad de fase c_p = ω/k', fmt(SP.cpTheo)],
+    ['Velocidad de grupo c_g = dω/dk', fmt(SP.cg)]
+  ];
+  if (S.mode === 'dos') {
+    rows.push(['Portadora ω̄/k̄ (dos ondas)', fmt(SP.cp)]);
+    rows.push(['Envolvente Δω/Δk (dos ondas)', fmt(SP.cgTwo)]);
+  }
+  rows.push(['c_g medida siguiendo la envolvente', fmt(CGM)]);
+  rows.push(['Cociente c_g / c_p', Math.abs(SP.cpTheo) < 1e-6 ? '∞ (crestas fijas)' : fmt(SP.cg/SP.cpTheo)]);
+  $('tbl').innerHTML = '<tr><th>Cantidad</th><th style="text-align:right">Valor</th></tr>' +
+    rows.map(r => `<tr><td>${r[0].replace(/c_p/g,'c<sub>p</sub>').replace(/c_g/g,'c<sub>g</sub>')}</td><td class="num">${r[1]}</td></tr>`).join('');
+  const ref = S.mode === 'dos' ? SP.cgTwo : SP.cg, err = Math.abs(CGM - ref), rel = err / Math.max(0.05, Math.abs(ref));
+  const msg = $('msg'); msg.classList.remove('warn');
+  if (S.mode === 'dos') msg.textContent = `Verificación: la envolvente medida avanza a ${fmt(CGM)} y Δω/Δk = ${fmt(ref)} (diferencia ${err.toExponential(1)}).`;
+  else if (rel < 0.05) msg.textContent = `Verificación: la envolvente medida avanza a ${fmt(CGM)}, frente a dω/dk = ${fmt(ref)} (diferencia ${(100*rel).toFixed(1)} %).`;
+  else { msg.classList.add('warn'); msg.textContent = `La envolvente medida avanza a ${fmt(CGM)} y dω/dk = ${fmt(ref)}: el paquete se deforma tanto que su máximo no sigue a c_g. Reduzca Δk para un paquete más ancho en x.`; }
+}
+
+/* ---------- UI ---------- */
+function buildRelButtons(){
+  $('relBtns').innerHTML = Object.entries(RELS).map(([k,r]) => `<button data-rel="${k}" aria-pressed="${k===S.rel}">${r.name}</button>`).join('');
+  $('relBtns').querySelectorAll('button').forEach(b => b.onclick = () => { S.rel = b.dataset.rel; syncUI(); recompute(); });
+}
+function buildParams(){
+  const r = RELS[S.rel];
+  $('relFormula').textContent = r.formula;
+  $('relParams').innerHTML = r.params.map(q => `<div class="ctrl"><label for="p_${q.id}">${q.label} <output id="p_${q.id}o">${S.p[S.rel][q.id]}</output></label>
+    <input type="range" id="p_${q.id}" min="${q.min}" max="${q.max}" step="${q.step}" value="${S.p[S.rel][q.id]}"></div>`).join('');
+  r.params.forEach(q => { const el = $('p_'+q.id); el.oninput = () => { S.p[S.rel][q.id] = +el.value; $('p_'+q.id+'o').textContent = (+el.value).toFixed(2); recompute(); }; });
+}
+function syncUI(){
+  $('relBtns').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.rel === S.rel));
+  $('modeBtns').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
+  buildParams();
+  $('k0').value = S.k0; $('dk').value = S.dk; $('spd').value = S.spd;
+  $('k0o').textContent = S.k0.toFixed(2); $('dko').textContent = S.dk.toFixed(2); $('spdo').textContent = S.spd.toFixed(1);
+  $('dkLabel').textContent = S.mode === 'dos' ? 'Separación Δk' : 'Ancho espectral Δk';
+  $('lgGhost').style.display = S.mode === 'paquete' ? '' : 'none';
+}
+function recompute(){
+  MS = buildModes(); SP = speeds(MS); CGM = measureCg(MS);
+  computeHov(); updateTable(); drawDisp(); drawWave(); drawHov();
+}
+
+$('modeBtns').querySelectorAll('button').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; syncUI(); recompute(); });
+$('k0').oninput = e => { S.k0 = +e.target.value; $('k0o').textContent = S.k0.toFixed(2); recompute(); };
+$('dk').oninput = e => { S.dk = +e.target.value; $('dko').textContent = S.dk.toFixed(2); recompute(); };
+$('spd').oninput = e => { S.spd = +e.target.value; $('spdo').textContent = S.spd.toFixed(1); };
+$('play').onclick = () => { S.playing = !S.playing; $('play').textContent = S.playing ? 'Pausar' : 'Reanudar'; };
+$('reset').onclick = () => { S.t = 0; drawWave(); drawHov(); };
+$('exps').innerHTML = EXPS.map((e,i) => `<button data-i="${i}">${e.label.replace('c_g','c<sub>g</sub>').replace('c_p','c<sub>p</sub>')}</button>`).join('');
+$('exps').querySelectorAll('button').forEach(b => b.onclick = () => {
+  const e = EXPS[+b.dataset.i].set;
+  S.rel = e.rel; S.mode = e.mode; S.k0 = e.k0; S.dk = e.dk; if (e.p) Object.assign(S.p[e.rel], e.p);
+  S.t = 0; syncUI(); recompute();
+});
+
+let last = null;
+function frame(ts){
+  if (last !== null && S.playing) { S.t += S.spd * Math.min(0.1, (ts - last)/1000); if (S.t > TH) S.t -= TH; }
+  last = ts;
+  if (S.playing) { drawWave(); drawHov(); }
+  requestAnimationFrame(frame);
+}
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+if (reduce.matches) { S.playing = false; $('play').textContent = 'Reanudar'; }
+
+buildRelButtons(); syncUI(); recompute();
+window.addEventListener('resize', () => { drawDisp(); drawWave(); drawHov(); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { computeHov(); drawDisp(); drawWave(); drawHov(); });
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
