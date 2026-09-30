@@ -1964,4 +1964,22 @@ table.info-table td.none {
   color: rgba(0, 0, 0, 0.3);
 }
 
+.section-aside {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 1.6em 0 0;
+}
+.section-aside a {
+  color: #2D6A4F;
+  border-bottom: 1px solid rgba(45, 106, 79, 0.35);
+  -webkit-transition: 0.3s;
+  -o-transition: 0.3s;
+  transition: 0.3s;
+}
+.section-aside a:hover, .section-aside a:focus {
+  color: #40916C;
+  border-bottom-color: #40916C;
+  text-decoration: none;
+}
+
 /*# sourceMappingURL=style.css.map */

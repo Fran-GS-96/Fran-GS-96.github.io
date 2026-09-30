@@ -1990,3 +1990,21 @@ table.info-table td a {
 table.info-table td.none {
 	color: rgba(0,0,0,.3);
 }
+
+
+// Small aside line under a section (e.g. the course-notes link in Education)
+.section-aside {
+	font-size: 14px;
+	color: rgba(0,0,0,.55);
+	margin: 1.6em 0 0;
+	a {
+		color: $brand-color-2;
+		border-bottom: 1px solid rgba(45, 106, 79, .35);
+		@include transition(.3s);
+		&:hover, &:focus {
+			color: $brand-color-4;
+			border-bottom-color: $brand-color-4;
+			text-decoration: none;
+		}
+	}
+}
