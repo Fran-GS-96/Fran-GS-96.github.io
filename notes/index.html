@@ -16,6 +16,7 @@
     --green-light:#40916C;
     --ink:        rgba(0,0,0,.7);
     --muted:      rgba(0,0,0,.55);
+    --faint:      rgba(0,0,0,.22);
     --rule:       #e9e9e9;
     --sans: "Quicksand", Arial, sans-serif;
     --serif: "Playfair Display", Georgia, serif;
@@ -30,7 +31,7 @@
     background:
       repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 10px),
       var(--navy);
-    color: #fff; padding: 3em 0 2.6em;
+    color: #fff; padding: 2.6em 0 2.2em;
   }
   .wrap { max-width: 900px; margin: 0 auto; padding: 0 2em; }
   .eyebrow {
@@ -43,7 +44,7 @@
   }
   .masthead p { margin: 0; color: rgba(255,255,255,.8); max-width: 62ch; }
   .back {
-    display: inline-block; margin-top: 1.6em;
+    display: inline-block; margin-top: 1.4em;
     color: #fff; text-decoration: none;
     border: 1px solid rgba(255,255,255,.55);
     padding: 8px 16px; border-radius: 4px;
@@ -52,75 +53,75 @@
   }
   .back:hover { background: rgba(255,255,255,.12); border-color: #fff; color: #fff; }
 
-  main { padding: 3.2em 0 3em; }
+  main { padding: 2.6em 0 2.4em; }
   .intro {
     font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
-    color: var(--muted); margin: 0 0 2.4em;
-    padding-bottom: .9em; border-bottom: 1px solid var(--rule);
+    color: var(--muted); margin: 0 0 1.8em;
+    padding-bottom: .8em; border-bottom: 1px solid var(--rule);
   }
 
-  .group { margin-bottom: 3em; }
+  .group { margin-bottom: 2.2em; }
   .group:last-of-type { margin-bottom: 0; }
   .group-title {
     font-family: var(--serif); font-weight: 700;
-    font-size: 21px; letter-spacing: .5px;
-    color: var(--navy); margin: 0 0 .1em;
-  }
-  .group-note {
-    font-size: 13px; color: var(--muted); margin: 0 0 1em; max-width: 68ch;
+    font-size: 19px; letter-spacing: .5px;
+    color: var(--navy); margin: 0 0 .55em;
   }
 
   ul.notes { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
   ul.notes li { border-bottom: 1px solid var(--rule); }
   a.note {
-    display: flex; align-items: baseline; gap: 1.2em;
+    display: flex; align-items: baseline; gap: .7em;
     text-decoration: none; color: inherit;
-    padding: 1.4em 1.2em 1.5em; border-radius: 6px;
-    transition: background .25s;
+    padding: .55em .8em; border-radius: 4px;
+    line-height: 1.55; transition: background .2s;
   }
-  a.note:hover { background: rgba(45,106,79,.055); }
-  .note-body { flex: 1; min-width: 0; }
-  a.note h3 {
-    font-family: var(--sans); font-size: 17px; font-weight: 600;
-    color: var(--navy); margin: 0 0 .1em;
+  a.note:hover { background: rgba(45,106,79,.06); }
+  .t {
+    font-weight: 600; color: var(--navy); font-size: 15px;
+    flex: 0 0 auto;
   }
-  a.note:hover h3 { color: var(--green); }
-  .follows { font-size: 13px; color: var(--muted); margin: 0; }
-  .follows em { font-style: italic; }
-  .meta {
-    flex: 0 0 auto; font-size: 12px; letter-spacing: 1px;
-    text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  a.note:hover .t { color: var(--green); }
+  .d {
+    flex: 1 1 auto; min-width: 0;
+    font-size: 13px; color: var(--muted);
   }
-  .meta .pdf {
-    display: inline-block; margin-left: 10px;
+  .d::before {
+    content: "\00b7"; margin-right: .7em; color: var(--faint);
+  }
+  .d em { font-style: italic; }
+  .pdf {
+    flex: 0 0 auto;
     color: #fff; background: var(--navy-light);
-    padding: 2px 7px; border-radius: 10px; font-size: 10px;
+    padding: 1px 7px; border-radius: 10px;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
   }
   .lang {
-    display: inline-block; margin-left: 8px; vertical-align: middle;
-    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    display: inline-block; margin-left: 7px; vertical-align: 1px;
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
     color: #fff; background: var(--green);
-    padding: 2px 7px; border-radius: 10px; font-weight: 500;
+    padding: 1px 6px; border-radius: 9px; font-weight: 500;
   }
 
-  .alsonote {
-    margin-top: 2.2em; font-size: 14px; color: var(--muted);
-  }
+  .alsonote { margin-top: 2em; font-size: 14px; color: var(--muted); }
   .alsonote a { color: var(--green); }
   .alsonote a:hover { color: var(--green-light); }
 
   footer {
-    border-top: 1px solid var(--rule); padding: 1.8em 0 3em;
-    font-size: 13px; color: var(--muted); margin-top: 1.5em;
+    border-top: 1px solid var(--rule); padding: 1.6em 0 2.6em;
+    font-size: 13px; color: var(--muted); margin-top: 1.4em;
   }
   footer a { color: var(--navy); }
 
-  @media screen and (max-width: 600px) {
+  @media screen and (max-width: 640px) {
     .masthead h1 { font-size: 24px; }
     .wrap { padding: 0 1.2em; }
-    .group-title { font-size: 18px; }
-    a.note { flex-direction: column; gap: .4em; padding: 1.2em .4em 1.3em; }
-    .meta { order: -1; }
+    .group-title { font-size: 17px; }
+    a.note { flex-wrap: wrap; gap: .15em .7em; padding: .6em .3em; }
+    .t { flex: 1 1 auto; }
+    .pdf { order: 1; }
+    .d { flex: 1 1 100%; order: 2; }
+    .d::before { content: none; }
   }
 </style>
 </head>
@@ -130,7 +131,7 @@
     <div class="wrap">
       <p class="eyebrow">Notes</p>
       <h1>Course Notes</h1>
-      <p>Notes I typeset as I work through physics courses &mdash; the core graduate sequence, then advanced theoretical topics, then meteorology. Each one follows the structure of its source, condensed to the results and the arguments that get you to them. I add to these as I go.</p>
+      <p>Notes I typeset as I work through physics courses, condensed to the results and the arguments that get you to them. I add to these as I go.</p>
       <a class="back" href="../index.html">&larr; Back to main site</a>
     </div>
   </header>
@@ -141,125 +142,84 @@
 
       <section class="group">
         <h2 class="group-title">General courses</h2>
-        <p class="group-note">The core sequence, each following the standard text for the subject.</p>
         <ul class="notes">
-
-          <li>
-            <a class="note" href="Classical_Mechanics_Course_notes.pdf">
-              <div class="note-body">
-                <h3>Classical Mechanics</h3>
-                <p class="follows">Follows Goldstein, <em>Classical Mechanics</em></p>
-              </div>
-              <span class="meta">37 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Electrodynamics_Course_notes.pdf">
-              <div class="note-body">
-                <h3>Electrodynamics</h3>
-                <p class="follows">Follows Jackson, <em>Classical Electrodynamics</em></p>
-              </div>
-              <span class="meta">45 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Quantum_Mechanics_Course_notes.pdf">
-              <div class="note-body">
-                <h3>Quantum Mechanics</h3>
-                <p class="follows">Follows Cohen-Tannoudji, Diu &amp; Lalo&euml;, <em>Quantum Mechanics</em></p>
-              </div>
-              <span class="meta">32 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Statistical_Physics_Course_notes.pdf">
-              <div class="note-body">
-                <h3>Statistical Physics</h3>
-                <p class="follows">Follows Huang, <em>Introduction to Statistical Physics</em></p>
-              </div>
-              <span class="meta">23 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
+          <li><a class="note" href="Classical_Mechanics_Course_notes.pdf">
+            <span class="t">Classical Mechanics</span>
+            <span class="d">Goldstein, <em>Classical Mechanics</em></span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Electrodynamics_Course_notes.pdf">
+            <span class="t">Electrodynamics</span>
+            <span class="d">Jackson, <em>Classical Electrodynamics</em></span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Quantum_Mechanics_Course_notes.pdf">
+            <span class="t">Quantum Mechanics</span>
+            <span class="d">Cohen-Tannoudji, Diu &amp; Lalo&euml;, <em>Quantum Mechanics</em></span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Statistical_Physics_Course_notes.pdf">
+            <span class="t">Statistical Physics</span>
+            <span class="d">Huang, <em>Introduction to Statistical Physics</em></span>
+            <span class="pdf">PDF</span>
+          </a></li>
         </ul>
       </section>
 
       <section class="group">
         <h2 class="group-title">Advanced theoretical courses</h2>
-        <p class="group-note">Graduate topics courses, taken from lectures rather than a single textbook; where the course is one lecturer&rsquo;s, they are credited.</p>
         <ul class="notes">
-
-          <li>
-            <a class="note" href="Quantum_Field_Theory.pdf">
-              <div class="note-body">
-                <h3>Quantum Field Theory</h3>
-                <p class="follows">Canonical quantisation of scalar and fermion fields, through to QED</p>
-              </div>
-              <span class="meta">26 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Theory_of_Condensed_Matter.pdf">
-              <div class="note-body">
-                <h3>Theory of Condensed Matter</h3>
-                <p class="follows">Lectures by V. Cheianov &mdash; phonons, second quantisation, superfluidity and BCS theory</p>
-              </div>
-              <span class="meta">47 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Non_Equilibrium_Statistical_Physics.pdf">
-              <div class="note-body">
-                <h3>Non-Equilibrium Statistical Physics</h3>
-                <p class="follows">Lectures by C. Jarzynski &mdash; Langevin and Fokker&ndash;Planck dynamics, linear response, fluctuation theorems</p>
-              </div>
-              <span class="meta">25 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Applied_Quantum_Algorithms.pdf">
-              <div class="note-body">
-                <h3>Applied Quantum Algorithms</h3>
-                <p class="follows">Variational algorithms, Hamiltonian simulation, phase estimation and strongly correlated systems</p>
-              </div>
-              <span class="meta">20 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
+          <li><a class="note" href="Quantum_Field_Theory.pdf">
+            <span class="t">Quantum Field Theory</span>
+            <span class="d">Canonical quantisation, path integrals and the renormalisation group</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Statistical_Physics_of_Fields.pdf">
+            <span class="t">Statistical Physics of Fields</span>
+            <span class="d">Kardar, <em>Statistical Physics of Fields</em></span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Theory_of_Condensed_Matter.pdf">
+            <span class="t">Theory of Condensed Matter</span>
+            <span class="d">Lectures by V. Cheianov &mdash; phonons, superfluidity, BCS theory</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Non_Equilibrium_Statistical_Physics.pdf">
+            <span class="t">Non-Equilibrium Statistical Physics</span>
+            <span class="d">Lectures by C. Jarzynski &mdash; linear response, fluctuation theorems</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Non_Equilibrium_Statistical_Physics_Lectures.pdf">
+            <span class="t">Non-Equilibrium Statistical Mechanics &amp; Critical Dynamics</span>
+            <span class="d">Landau theory, defects, transport, the RG</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Stochastic_and_Information_Thermodynamics.pdf">
+            <span class="t">Stochastic and Information Thermodynamics</span>
+            <span class="d">Information and entropy, master equations, fluctuation theorems</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Applied_Quantum_Algorithms.pdf">
+            <span class="t">Applied Quantum Algorithms</span>
+            <span class="d">Variational algorithms, Hamiltonian simulation, phase estimation</span>
+            <span class="pdf">PDF</span>
+          </a></li>
         </ul>
       </section>
 
       <section class="group">
         <h2 class="group-title">Meteorology</h2>
-        <p class="group-note">Notes from the meteorology side of my work, written in Spanish.</p>
         <ul class="notes">
-
-          <li>
-            <a class="note" href="Meteorologia_Capa_Limite.pdf">
-              <div class="note-body">
-                <h3>Meteorolog&iacute;a de Capa L&iacute;mite<span class="lang">in Spanish</span></h3>
-                <p class="follows">Turbulence and the closure problem, turbulent kinetic energy, Monin&ndash;Obukhov similarity and the surface energy balance</p>
-              </div>
-              <span class="meta">32 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
-          <li>
-            <a class="note" href="Meteorologia_Fisica.pdf">
-              <div class="note-body">
-                <h3>Meteorolog&iacute;a F&iacute;sica<span class="lang">in Spanish</span></h3>
-                <p class="follows">Atmospheric thermodynamics, moist convection and the Skew-T diagram, microphysics and radiative transfer</p>
-              </div>
-              <span class="meta">46 pp<span class="pdf">PDF</span></span>
-            </a>
-          </li>
-
+          <li><a class="note" href="Meteorologia_Capa_Limite.pdf">
+            <span class="t">Meteorolog&iacute;a de Capa L&iacute;mite<span class="lang">es</span></span>
+            <span class="d">Turbulence, Monin&ndash;Obukhov similarity, surface energy balance</span>
+            <span class="pdf">PDF</span>
+          </a></li>
+          <li><a class="note" href="Meteorologia_Fisica.pdf">
+            <span class="t">Meteorolog&iacute;a F&iacute;sica<span class="lang">es</span></span>
+            <span class="d">Atmospheric thermodynamics, moist convection, radiative transfer</span>
+            <span class="pdf">PDF</span>
+          </a></li>
         </ul>
       </section>
 
