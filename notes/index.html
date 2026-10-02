@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Course Notes | Francisco Gómez Serrano</title>
-<meta name="description" content="Typeset notes from graduate physics courses: classical mechanics, electrodynamics, quantum mechanics and statistical physics." />
+<meta name="description" content="Typeset notes from physics courses: the core graduate sequence, advanced theoretical topics courses, and meteorology." />
 <link rel="icon" type="image/png" href="../favicon_s.png">
 <link href="https://fonts.googleapis.com/css?family=Quicksand:300,400,500,700" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700" rel="stylesheet">
@@ -55,13 +55,23 @@
   main { padding: 3.2em 0 3em; }
   .intro {
     font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
-    color: var(--muted); margin: 0 0 2em;
+    color: var(--muted); margin: 0 0 2.4em;
     padding-bottom: .9em; border-bottom: 1px solid var(--rule);
   }
 
-  ul.notes { list-style: none; margin: 0; padding: 0; }
+  .group { margin-bottom: 3em; }
+  .group:last-of-type { margin-bottom: 0; }
+  .group-title {
+    font-family: var(--serif); font-weight: 700;
+    font-size: 21px; letter-spacing: .5px;
+    color: var(--navy); margin: 0 0 .1em;
+  }
+  .group-note {
+    font-size: 13px; color: var(--muted); margin: 0 0 1em; max-width: 68ch;
+  }
+
+  ul.notes { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
   ul.notes li { border-bottom: 1px solid var(--rule); }
-  ul.notes li:last-child { border-bottom: none; }
   a.note {
     display: flex; align-items: baseline; gap: 1.2em;
     text-decoration: none; color: inherit;
@@ -70,11 +80,11 @@
   }
   a.note:hover { background: rgba(45,106,79,.055); }
   .note-body { flex: 1; min-width: 0; }
-  a.note h2 {
+  a.note h3 {
     font-family: var(--sans); font-size: 17px; font-weight: 600;
     color: var(--navy); margin: 0 0 .1em;
   }
-  a.note:hover h2 { color: var(--green); }
+  a.note:hover h3 { color: var(--green); }
   .follows { font-size: 13px; color: var(--muted); margin: 0; }
   .follows em { font-style: italic; }
   .meta {
@@ -86,10 +96,15 @@
     color: #fff; background: var(--navy-light);
     padding: 2px 7px; border-radius: 10px; font-size: 10px;
   }
+  .lang {
+    display: inline-block; margin-left: 8px; vertical-align: middle;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: #fff; background: var(--green);
+    padding: 2px 7px; border-radius: 10px; font-weight: 500;
+  }
 
   .alsonote {
-    margin-top: 2.6em; padding-top: 1.6em;
-    border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted);
+    margin-top: 2.2em; font-size: 14px; color: var(--muted);
   }
   .alsonote a { color: var(--green); }
   .alsonote a:hover { color: var(--green-light); }
@@ -103,6 +118,7 @@
   @media screen and (max-width: 600px) {
     .masthead h1 { font-size: 24px; }
     .wrap { padding: 0 1.2em; }
+    .group-title { font-size: 18px; }
     a.note { flex-direction: column; gap: .4em; padding: 1.2em .4em 1.3em; }
     .meta { order: -1; }
   }
@@ -114,58 +130,128 @@
     <div class="wrap">
       <p class="eyebrow">Notes</p>
       <h1>Course Notes</h1>
-      <p>Notes I typeset as I work through physics courses, usually following the structure of a standard text for the subject and condensed to the results and the arguments that get you to them. I add to these as I go.</p>
+      <p>Notes I typeset as I work through physics courses &mdash; the core graduate sequence, then advanced theoretical topics, then meteorology. Each one follows the structure of its source, condensed to the results and the arguments that get you to them. I add to these as I go.</p>
       <a class="back" href="../index.html">&larr; Back to main site</a>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-      <p class="intro">Written in LaTeX &middot; in English &middot; free to use</p>
+      <p class="intro">Written in LaTeX &middot; free to use</p>
 
-      <ul class="notes">
+      <section class="group">
+        <h2 class="group-title">General courses</h2>
+        <p class="group-note">The core sequence, each following the standard text for the subject.</p>
+        <ul class="notes">
 
-        <li>
-          <a class="note" href="Classical_Mechanics_Course_notes.pdf">
-            <div class="note-body">
-              <h2>Classical Mechanics</h2>
-              <p class="follows">Follows Goldstein, <em>Classical Mechanics</em></p>
-            </div>
-            <span class="meta">37 pp<span class="pdf">PDF</span></span>
-          </a>
-        </li>
+          <li>
+            <a class="note" href="Classical_Mechanics_Course_notes.pdf">
+              <div class="note-body">
+                <h3>Classical Mechanics</h3>
+                <p class="follows">Follows Goldstein, <em>Classical Mechanics</em></p>
+              </div>
+              <span class="meta">37 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
 
-        <li>
-          <a class="note" href="Electrodynamics_Course_notes.pdf">
-            <div class="note-body">
-              <h2>Electrodynamics</h2>
-              <p class="follows">Follows Jackson, <em>Classical Electrodynamics</em></p>
-            </div>
-            <span class="meta">45 pp<span class="pdf">PDF</span></span>
-          </a>
-        </li>
+          <li>
+            <a class="note" href="Electrodynamics_Course_notes.pdf">
+              <div class="note-body">
+                <h3>Electrodynamics</h3>
+                <p class="follows">Follows Jackson, <em>Classical Electrodynamics</em></p>
+              </div>
+              <span class="meta">45 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
 
-        <li>
-          <a class="note" href="Quantum_Mechanics_Course_notes.pdf">
-            <div class="note-body">
-              <h2>Quantum Mechanics</h2>
-              <p class="follows">Follows Cohen-Tannoudji, Diu &amp; Lalo&euml;, <em>Quantum Mechanics</em></p>
-            </div>
-            <span class="meta">32 pp<span class="pdf">PDF</span></span>
-          </a>
-        </li>
+          <li>
+            <a class="note" href="Quantum_Mechanics_Course_notes.pdf">
+              <div class="note-body">
+                <h3>Quantum Mechanics</h3>
+                <p class="follows">Follows Cohen-Tannoudji, Diu &amp; Lalo&euml;, <em>Quantum Mechanics</em></p>
+              </div>
+              <span class="meta">32 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
 
-        <li>
-          <a class="note" href="Statistical_Physics_Course_notes.pdf">
-            <div class="note-body">
-              <h2>Statistical Physics</h2>
-              <p class="follows">Follows Huang, <em>Introduction to Statistical Physics</em></p>
-            </div>
-            <span class="meta">23 pp<span class="pdf">PDF</span></span>
-          </a>
-        </li>
+          <li>
+            <a class="note" href="Statistical_Physics_Course_notes.pdf">
+              <div class="note-body">
+                <h3>Statistical Physics</h3>
+                <p class="follows">Follows Huang, <em>Introduction to Statistical Physics</em></p>
+              </div>
+              <span class="meta">23 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
 
-      </ul>
+        </ul>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">Advanced theoretical courses</h2>
+        <p class="group-note">Graduate topics courses, taken from lectures rather than a single textbook; where the course is one lecturer&rsquo;s, they are credited.</p>
+        <ul class="notes">
+
+          <li>
+            <a class="note" href="Quantum_Field_Theory.pdf">
+              <div class="note-body">
+                <h3>Quantum Field Theory</h3>
+                <p class="follows">Canonical quantisation of scalar and fermion fields, through to QED</p>
+              </div>
+              <span class="meta">26 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
+
+          <li>
+            <a class="note" href="Theory_of_Condensed_Matter.pdf">
+              <div class="note-body">
+                <h3>Theory of Condensed Matter</h3>
+                <p class="follows">Lectures by V. Cheianov &mdash; phonons, second quantisation, superfluidity and BCS theory</p>
+              </div>
+              <span class="meta">47 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
+
+          <li>
+            <a class="note" href="Non_Equilibrium_Statistical_Physics.pdf">
+              <div class="note-body">
+                <h3>Non-Equilibrium Statistical Physics</h3>
+                <p class="follows">Lectures by C. Jarzynski &mdash; Langevin and Fokker&ndash;Planck dynamics, linear response, fluctuation theorems</p>
+              </div>
+              <span class="meta">25 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
+
+          <li>
+            <a class="note" href="Applied_Quantum_Algorithms.pdf">
+              <div class="note-body">
+                <h3>Applied Quantum Algorithms</h3>
+                <p class="follows">Variational algorithms, Hamiltonian simulation, phase estimation and strongly correlated systems</p>
+              </div>
+              <span class="meta">20 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
+
+        </ul>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">Meteorology</h2>
+        <p class="group-note">Notes from the meteorology side of my work, written in Spanish.</p>
+        <ul class="notes">
+
+          <li>
+            <a class="note" href="Meteorologia_Fisica.pdf">
+              <div class="note-body">
+                <h3>Meteorolog&iacute;a F&iacute;sica<span class="lang">in Spanish</span></h3>
+                <p class="follows">Atmospheric thermodynamics, moist convection and the Skew-T diagram, microphysics and radiative transfer</p>
+              </div>
+              <span class="meta">46 pp<span class="pdf">PDF</span></span>
+            </a>
+          </li>
+
+        </ul>
+      </section>
 
       <p class="alsonote">
         See also: <a href="../teaching/index.html">interactive teaching resources</a> &mdash;
