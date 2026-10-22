@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Teaching Resources | Francisco Gómez Serrano</title>
-<meta name="description" content="Interactive resources for Dynamics of the Atmosphere — geopotential, the omega equation, quasi-geostrophic potential vorticity and wave dispersion." />
+<meta name="description" content="Browser-based interactive tools for teaching atmospheric physics — quasi-geostrophic dynamics, wave propagation and the boundary layer." />
 <link rel="icon" type="image/png" href="../favicon_s.png">
 <link href="https://fonts.googleapis.com/css?family=Quicksand:300,400,500,700" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700" rel="stylesheet">
@@ -54,12 +54,19 @@
   .back:hover { background: rgba(255,255,255,.12); border-color: #fff; color: #fff; }
 
   main { padding: 2.6em 0 2.4em; }
-  .course-label {
+  .intro {
     font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
     color: var(--muted); margin: 0 0 1.8em;
     padding-bottom: .8em; border-bottom: 1px solid var(--rule);
   }
-  .course-label strong { color: var(--navy); font-weight: 600; }
+
+  .group { margin-bottom: 2.2em; }
+  .group:last-of-type { margin-bottom: 0; }
+  .group-title {
+    font-family: var(--serif); font-weight: 700;
+    font-size: 19px; letter-spacing: .5px;
+    color: var(--navy); margin: 0 0 .55em;
+  }
 
   ul.resources { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
   ul.resources li { border-bottom: 1px solid var(--rule); }
@@ -74,12 +81,11 @@
   a.resource:hover .t { color: var(--green); }
   .d { flex: 1 1 auto; min-width: 0; font-size: 13px; color: var(--muted); }
   .d::before { content: "\00b7"; margin-right: .7em; color: var(--faint); }
-  .d em { font-style: italic; }
   .lang {
-    display: inline-block; margin-left: 7px; vertical-align: 1px;
-    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    display: inline-block; margin-left: 8px; vertical-align: 1px;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
     color: #fff; background: var(--green);
-    padding: 1px 6px; border-radius: 9px; font-weight: 500;
+    padding: 2px 7px; border-radius: 10px; font-weight: 500;
   }
 
   .alsonote { margin-top: 2em; font-size: 14px; color: var(--muted); }
@@ -95,9 +101,10 @@
   @media screen and (max-width: 640px) {
     .masthead h1 { font-size: 24px; }
     .wrap { padding: 0 1.2em; }
-    a.resource { flex-wrap: wrap; gap: .3em .7em; padding: .6em .3em; }
-    .t { flex: 1 1 100%; }
-    .d { flex: 1 1 auto; }
+    .group-title { font-size: 17px; }
+    a.resource { flex-wrap: wrap; gap: .15em .7em; padding: .6em .3em; }
+    .t { flex: 1 1 auto; }
+    .d { flex: 1 1 100%; }
     .d::before { content: none; }
   }
 </style>
@@ -108,40 +115,56 @@
     <div class="wrap">
       <p class="eyebrow">Teaching</p>
       <h1>Interactive Resources</h1>
-      <p>Browser-based tools I built for teaching atmospheric dynamics. Move the sliders and the fields, diagnostics and diagrams update live. No install, nothing to download.</p>
+      <p>Browser-based tools I built for teaching atmospheric physics. Move the sliders and the fields, diagnostics and diagrams update live. No install, nothing to download.</p>
       <a class="back" href="../index.html">&larr; Back to main site</a>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-      <p class="course-label">
-        Built for <strong>Dynamics of the Atmosphere</strong> &middot; 2026 S2 &middot; Escuela T&eacute;cnica Aeron&aacute;utica
-        <span class="lang">in Spanish</span>
-      </p>
+      <p class="intro">Runs in the browser &middot; free to use <span class="lang">in Spanish</span></p>
 
-      <ul class="resources">
-        <li><a class="resource" href="geopotencial_interactivo.html">
-          <span class="t">Standing-wave geopotential</span>
-          <span class="d">Geostrophic wind and relative vorticity of a stationary wave</span>
-        </a></li>
-        <li><a class="resource" href="tendencia_geopotencial_interactiva.html">
-          <span class="t">Geopotential tendency equation</span>
-          <span class="d">Holton, <em>Dynamic Meteorology</em> &sect;6.3.1 &mdash; vorticity and temperature advection</span>
-        </a></li>
-        <li><a class="resource" href="vpcg_interactivo.html">
-          <span class="t">Quasi-geostrophic potential vorticity</span>
-          <span class="d">Holton &sect;6.3.2 &mdash; the tendency equation as a conservation law</span>
-        </a></li>
-        <li><a class="resource" href="omega_interactivo.html">
-          <span class="t">The omega equation</span>
-          <span class="d">Holton &sect;6.4.1 &mdash; vertical motion from an instantaneous field</span>
-        </a></li>
-        <li><a class="resource" href="dispersion_interactivo.html">
-          <span class="t">Phase and group velocity</span>
-          <span class="d">Dispersive waves, from a spring chain to Rossby waves</span>
-        </a></li>
-      </ul>
+      <section class="group">
+        <h2 class="group-title">Quasi-geostrophic dynamics</h2>
+        <ul class="resources">
+          <li><a class="resource" href="geopotencial_interactivo.html">
+            <span class="t">Standing-wave geopotential</span>
+            <span class="d">Geostrophic wind and relative vorticity of a stationary wave</span>
+          </a></li>
+          <li><a class="resource" href="tendencia_geopotencial_interactiva.html">
+            <span class="t">Geopotential tendency</span>
+            <span class="d">The two forcings that make heights rise and fall</span>
+          </a></li>
+          <li><a class="resource" href="vpcg_interactivo.html">
+            <span class="t">Quasi-geostrophic potential vorticity</span>
+            <span class="d">The tendency equation read as a conservation law</span>
+          </a></li>
+          <li><a class="resource" href="omega_interactivo.html">
+            <span class="t">The omega equation</span>
+            <span class="d">Vertical motion diagnosed from an instantaneous field</span>
+          </a></li>
+        </ul>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">Waves</h2>
+        <ul class="resources">
+          <li><a class="resource" href="dispersion_interactivo.html">
+            <span class="t">Phase and group velocity</span>
+            <span class="d">Why crests and energy travel at different speeds</span>
+          </a></li>
+        </ul>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">Boundary layer</h2>
+        <ul class="resources">
+          <li><a class="resource" href="capa_limite.html">
+            <span class="t">The diurnal boundary layer</span>
+            <span class="d">How it grows and collapses over a day &mdash; plumes, clouds and profiles</span>
+          </a></li>
+        </ul>
+      </section>
 
       <p class="alsonote">
         See also: <a href="../notes/index.html">course notes</a> &mdash;

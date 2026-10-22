@@ -1,0 +1,646 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Capa Límite Diurna</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de paneles apilados — reloj solar + escena, diagrama tiempo-altura, perfiles verticales */
+:root{
+  --bg:#e8ecf0; --panel:#ffffff; --ink:#111a22; --muted:#55687a; --line:#c8d3dc;
+  --sun:#d4821f; --ml:#c4612f; --rl:#7a6ea8; --sbl:#2f6190; --fa:#5c8098; --ez:#9a8f55; --cloud:#f2f6fa;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e141a; --panel:#18212b; --ink:#e4ebf1; --muted:#95a7b6; --line:#2a3744;
+  --sun:#f0a94a; --ml:#e58a52; --rl:#a99ddd; --sbl:#6aa6de; --fa:#8fb3c9; --ez:#d0c07a; --cloud:#dde6ee;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --panel:#18212b; --ink:#e4ebf1; --muted:#95a7b6; --line:#2a3744;
+  --sun:#f0a94a; --ml:#e58a52; --rl:#a99ddd; --sbl:#6aa6de; --fa:#8fb3c9; --ez:#d0c07a; --cloud:#dde6ee;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Source Sans 3", system-ui, sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:24px 48px;
+  line-height:1.5;
+}
+.wrap{max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
+header h1{
+  font-family:Spectral, Georgia, serif; font-weight:600; font-size:clamp(1.5rem,1.1rem + 1.6vw,2.1rem);
+  margin:0 0 .25rem; text-wrap:balance; letter-spacing:-.01em;
+}
+header p{margin:0; color:var(--muted); max-width:62ch}
+.eyebrow{
+  font-family:"IBM Plex Mono", monospace; font-size:.7rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 .4rem;
+}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:14px}
+.panel h2{
+  font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 10px; font-weight:500;
+}
+canvas{display:block; width:100%; touch-action:none}
+#scene{height:380px; cursor:grab; border-radius:3px}
+#scene.grabbing{cursor:grabbing}
+#fig17{height:270px; cursor:crosshair}
+.controls{display:flex; flex-wrap:wrap; gap:14px 20px; align-items:center; margin-top:12px}
+.ctl{display:flex; flex-direction:column; gap:3px; flex:1 1 190px; min-width:0}
+.ctl label{font-family:"IBM Plex Mono", monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.ctl .val{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; color:var(--ink)}
+input[type=range]{width:100%; accent-color:var(--sun)}
+button{
+  font-family:"Source Sans 3", sans-serif; font-size:.9rem; padding:7px 14px;
+  background:var(--ink); color:var(--panel); border:none; border-radius:3px; cursor:pointer;
+}
+button.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+button:focus-visible, input:focus-visible{outline:2px solid var(--sun); outline-offset:2px}
+.state{display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line)}
+.stat{display:flex; flex-direction:column; min-width:0}
+.stat b{font-family:"IBM Plex Mono", monospace; font-weight:500; font-variant-numeric:tabular-nums; font-size:1.05rem}
+.stat span{font-size:.72rem; color:var(--muted); font-family:"IBM Plex Mono", monospace; letter-spacing:.06em; text-transform:uppercase}
+.regime{border-left:3px solid var(--sun); padding:2px 0 2px 12px; margin-top:12px}
+.regime b{font-family:Spectral, serif; font-size:1.1rem; display:block}
+.regime span{color:var(--muted); font-size:.9rem}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.grid4 canvas{height:230px}
+@media (max-width:760px){ .grid4{grid-template-columns:repeat(2,1fr)} #scene{height:320px} }
+.legend{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:10px; font-size:.78rem; color:var(--muted)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px}
+.notes{font-size:.88rem; color:var(--muted)}
+.notes p{margin:.4rem 0}
+.notes b{color:var(--ink); font-weight:600}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Dinámica II · Unidad C · Stull, Fig. 1.7</p>
+  <h1>Estructura de la capa límite a lo largo del día</h1>
+  <p>Arrastra el sol por su arco para recorrer el ciclo diurno. La chimenea emite un penacho cuyo comportamiento no está impuesto: cada partícula sigue una caminata aleatoria correlacionada con la σ<sub>w</sub> de la capa en que se encuentra y rebota en la inversión. Los cúmulus tampoco están dibujados a mano: aparecen cuando las térmicas alcanzan su nivel de condensación.</p>
+</header>
+
+<section class="panel">
+  <h2>Corte vertical · penacho, nubes y capas</h2>
+  <canvas id="scene"></canvas>
+  <div class="controls">
+    <div class="ctl">
+      <label for="tslider">Hora local <span class="val" id="tval">14:00</span></label>
+      <input type="range" id="tslider" min="0" max="24" step="0.02" value="14">
+    </div>
+    <div class="ctl">
+      <label for="hslider">Altura de la chimenea <span class="val" id="hval">150 m</span></label>
+      <input type="range" id="hslider" min="10" max="500" step="5" value="150">
+    </div>
+    <div class="ctl">
+      <label for="rslider">Humedad de la CL, r₀ <span class="val" id="rval">11,0 g/kg</span></label>
+      <input type="range" id="rslider" min="6" max="14" step="0.1" value="11">
+    </div>
+    <button id="play">Reproducir el día</button>
+    <button id="clear" class="ghost">Limpiar humo</button>
+  </div>
+  <div class="regime"><b id="regname">—</b><span id="regtext">—</span></div>
+  <div class="state">
+    <div class="stat"><b id="s-zi">—</b><span>z<sub>i</sub> capa mezclada</span></div>
+    <div class="stat"><b id="s-h">—</b><span>h capa estable</span></div>
+    <div class="stat"><b id="s-zb">—</b><span>z<sub>b</sub> base de nube (NCA)</span></div>
+    <div class="stat"><b id="s-zr">—</b><span>z<sub>r</sub> capa residual</span></div>
+    <div class="stat"><b id="s-ws">—</b><span>w<sub>*</sub> escala convectiva</span></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--ml)"></i>Capa mezclada</span>
+    <span><i style="background:var(--ez)"></i>Zona de entrainment / inversión</span>
+    <span><i style="background:var(--rl)"></i>Capa residual</span>
+    <span><i style="background:var(--sbl)"></i>Capa límite estable</span>
+    <span><i style="background:var(--fa)"></i>Atmósfera libre</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Diagrama tiempo–altura (Fig. 1.7)</h2>
+  <canvas id="fig17"></canvas>
+</section>
+
+<section class="panel">
+  <h2>Perfiles verticales en la hora seleccionada (Fig. 1.9 y 1.11)</h2>
+  <div class="grid4">
+    <canvas id="p-th"></canvas>
+    <canvas id="p-m"></canvas>
+    <canvas id="p-r"></canvas>
+    <canvas id="p-c"></canvas>
+  </div>
+</section>
+
+<section class="panel notes">
+  <p><b>Cómo se forman las nubes aquí.</b> La base de nube no es un parámetro: es el nivel de condensación por ascenso de la capa mezclada, calculado con la fórmula de Magnus a partir de θ de la capa y de r₀. La temperatura sube durante el día y el entrainment seca la capa, así que z<sub>b</sub> asciende; z<sub>i</sub> asciende más rápido. Cuando z<sub>i</sub> alcanza z<sub>b</sub>, las térmicas más altas condensan y aparecen cúmulus de buen tiempo, con base plana en z<sub>b</sub> y topes repartidos hasta z<sub>i</sub>. La capa mezclada queda dividida en <b>capa subnube</b> y <b>capa de nubes</b> (Stull, §1.6.1). Baja r₀ a 8 g/kg y el cielo queda despejado todo el día; súbela a 13 y los cúmulus aparecen antes de mediodía.</p>
+  <p><b>Qué mirar en el penacho.</b> A media tarde hace <i>looping</i>: los remolinos son del tamaño de z<sub>i</sub>, el humo sube y baja en bucles y toca el suelo cerca de la fuente. Tras la puesta de sol la turbulencia muere y, si la chimenea queda dentro de la capa estable, el penacho se abre sólo en horizontal (<i>fanning</i>). Si queda justo sobre h, se dispersa hacia arriba pero no hacia abajo: <i>lofting</i>.</p>
+  <p><b>El experimento de la mañana.</b> Pon la chimenea en 250–350 m, lleva la hora a las 03:00 y deja correr unos segundos; luego avanza lentamente hacia las 09:00. Cuando z<sub>i</sub> alcanza el penacho, el humo almacenado toda la noche baja de golpe al suelo: eso es la <b>fumigación</b> (Fig. 1.14).</p>
+  <p>Modelo idealizado con fines docentes: amanecer 07:00, ocaso 19:00, z<sub>i</sub> máxima 1950 m, capa residual heredada de 1600 m, p = 1000 hPa. Las alturas y los perfiles son prescritos; la dispersión del penacho y la condensación se calculan en la página.</p>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const TSR = 7, TSS = 19, ZTOP = 2200, DOMX = 4000, ZIMAX = 1950, ZRL0 = 1600, THRL = 299;
+const DAYLEN = TSS - (TSR + 0.5), NIGHTLEN = 24 - TSS + TSR;
+const clamp = (v,a,b)=>v<a?a:(v>b?b:v);
+const S = x => { x = clamp(x,0,1); return x*x*(3-2*x); };
+const sstep = (a,b,v) => S((v-a)/(b-a));
+const mix = (a,b,f) => a + (b-a)*f;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+let t = 14, hStack = 150, R0 = 11.0, playing = false, lastFrame = 0;
+
+/* ---------- modelo de capas (todas las transiciones por smoothstep) ---------- */
+const thML = x => 291 + 8*S(Math.min(1, x/0.5)) + 0.8*S(Math.max(0,(x-0.5)/0.5));
+const rML  = x => R0 - 0.8*x;
+function lclHeight(TK, r){                       // nivel de condensación por ascenso, Magnus
+  const e = 1000*r/(622 + r);                    // hPa, con p = 1000 hPa
+  const g = Math.log(Math.max(e,0.1)/6.112);
+  const Td = 243.04*g/(17.625 - g);
+  return clamp(125*((TK-273.15) - Td), 120, 4000);
+}
+function state(tt){
+  const x = clamp((tt-(TSR+0.5))/DAYLEN, 0, 1);
+  let zi;
+  if(x < 0.25) zi = 60 + 200*S(x/0.25);
+  else if(x < 0.5) zi = 260 + (ZRL0-260)*S((x-0.25)/0.25);
+  else zi = ZRL0 + (ZIMAX-ZRL0)*S((x-0.5)/0.5);
+
+  const wDay = sstep(TSR+0.2, TSR+1.6, tt) * (1 - sstep(TSS-0.9, TSS+0.6, tt));
+  const el = (tt > TSS) ? tt-TSS : (tt < TSR ? tt+24-TSS : (tt < 13 ? NIGHTLEN : 0));
+  const frac = clamp(el/NIGHTLEN, 0, 1);
+  const h = 40 + 290*Math.sqrt(frac);
+
+  const zr   = mix(ZIMAX - 80*frac, Math.max(ZRL0, zi), wDay);
+  const ez   = mix(150, 0.12*zi, wDay);
+  const cap  = mix(h, zi, wDay);
+  const wstar= wDay*(0.5 + 1.8*Math.pow(Math.sin(Math.PI*x), 0.6));
+  const remn = mix(0, Math.max(zi, 320*(1 - Math.min(1, x/0.3))), wDay);
+  const zb   = lclHeight(thML(x), rML(x));
+  const cf   = wDay * S((zi - zb)/320);          // fracción nubosa
+  return {zi,h,zr,ez,cap,remn,wstar,wDay,frac,x,zb,cf};
+}
+
+/* ---------- perfiles (día y noche se mezclan con wDay) ---------- */
+function thDay(z, st){
+  const tm = thML(st.x), sl = Math.max(8, 0.08*st.zi);
+  if(z < sl) return tm + 2.0*Math.pow(1-z/sl, 1.6);
+  if(z <= st.zi) return tm;
+  if(z <= st.zi+st.ez) return tm + 2.2*(z-st.zi)/Math.max(1,st.ez);
+  const top = Math.max(tm+2.2, THRL);
+  if(z < st.zr) return top;
+  return top + 3.5*(z - Math.max(st.zr, st.zi+st.ez))/1000;
+}
+function thNight(z, st){
+  const th0 = THRL - 8*Math.sqrt(st.frac), thr = THRL - 1*st.frac;
+  if(z < st.h) return th0 + (thr-th0)*Math.pow(z/Math.max(1,st.h), 0.5);
+  if(z < st.zr) return thr;
+  if(z < st.zr+150) return thr + 2.0*(z-st.zr)/150;
+  return thr + 2.0 + 3.5*(z-st.zr-150)/1000;
+}
+const logw = (z, ztop, mtop) => mtop*Math.log(1+z/0.08)/Math.log(1+Math.max(z*0+ztop,1)/0.08);
+function mDay(z, st){
+  const sl = Math.max(10, 0.1*st.zi);
+  if(z < sl) return logw(z, sl, 6.2);
+  if(z <= st.zi) return 6.2;
+  return 6.2 + (10-6.2)*Math.min(1,(z-st.zi)/(st.ez+250));
+}
+function mNight(z, st){
+  const zj = 1.25*st.h, Mj = 8 + 5*st.frac;
+  if(z < st.h) return logw(z, Math.max(1,st.h), 2.6);
+  if(z < zj) return 2.6 + (Mj-2.6)*(z-st.h)/Math.max(1,zj-st.h);
+  if(z < zj+450) return Mj + (10-Mj)*(z-zj)/450;
+  return 10;
+}
+function rDay(z, st){
+  const r0 = rML(st.x);
+  if(z <= st.zi) return r0 - 1.6*(z/Math.max(1,st.zi));
+  if(z <= st.zi+st.ez) return (r0-1.6) - ((r0-1.6)-3.7)*(z-st.zi)/Math.max(1,st.ez);
+  return 3.7;
+}
+function rNight(z, st){
+  const r0 = rML(1);
+  if(z < st.h) return r0 - 0.5*(z/Math.max(1,st.h));
+  if(z < st.zr) return r0 - 1.1;
+  if(z < st.zr+150) return (r0-1.1) - ((r0-1.1)-3.7)*(z-st.zr)/150;
+  return 3.7;
+}
+const thetaV = (z, st) => mix(thNight(z,st), thDay(z,st), st.wDay);
+const windM  = (z, st) => mix(mNight(z,st),  mDay(z,st),  st.wDay);
+const mixr   = (z, st) => mix(rNight(z,st),  rDay(z,st),  st.wDay);
+
+/* ---------- partículas ---------- */
+const NBIN = 44, BINH = ZTOP/NBIN;
+let parts = [], bins = new Float64Array(NBIN);
+const randn = () => { let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+
+function turb(z, st){
+  let sd = 0.035, td = 40, sn = 0.035, tn = 40;
+  if(st.zi > 5){
+    if(z < st.zi){ const zz = clamp(z/st.zi, 0.02, 1);
+      sd = 0.62*Math.max(st.wstar,0.3)*Math.pow(zz,0.28)*(1-0.55*zz); td = 110; }
+    else if(z < st.zi+st.ez){ sd = 0.12; td = 40; }
+    else if(z < st.zr){ sd = 0.22; td = 70; }
+  }
+  if(z < st.h){ sn = 0.05 + 0.05*(1-z/Math.max(1,st.h)); tn = 18; }
+  else if(z < st.h*1.45){ sn = 0.10; tn = 35; }
+  else if(z < st.zr){ sn = 0.26; tn = 75; }
+  return {s: mix(sn, sd, st.wDay), T: mix(tn, td, st.wDay)};
+}
+function stepParticles(dt, st){
+  for(let i=0;i<3;i++){
+    if(parts.length < 900) parts.push({x: 0.16*DOMX, z: hStack + Math.random()*8, w: 0.25+0.3*Math.random(), age:0});
+  }
+  const cap = st.cap, strength = Math.abs(st.wDay-0.5)*2;   // la barrera se relaja en la transición
+  for(let i=parts.length-1;i>=0;i--){
+    const p = parts[i], tb = turb(p.z, st), a = Math.exp(-dt/tb.T);
+    p.w = a*p.w + tb.s*Math.sqrt(1-a*a)*randn();
+    const zPrev = p.z;
+    p.z += p.w*dt;
+    p.x += windM(p.z, st)*dt;
+    p.age += dt;
+    if(p.z < 2){ p.z = 2 - p.z; p.w = Math.abs(p.w)*0.8; }
+    if(cap > 5 && Math.random() < 0.55 + 0.45*strength){
+      if(p.z > cap && zPrev <= cap){ p.z = cap - (p.z-cap); p.w = -Math.abs(p.w)*0.7; }
+      else if(p.z < cap && zPrev >= cap){ p.z = cap + (cap-p.z); p.w = Math.abs(p.w)*0.7; }
+    }
+    if(p.x > DOMX || p.z > ZTOP || p.age > 2400) parts.splice(i,1);
+  }
+  bins.fill(0);
+  for(const p of parts) bins[clamp(Math.floor(p.z/BINH),0,NBIN-1)] += 1;
+  let mx = 1; for(let i=0;i<NBIN;i++) mx = Math.max(mx, bins[i]);
+  for(let i=0;i<NBIN;i++) bins[i] /= mx;
+}
+
+/* ---------- celdas de nube ---------- */
+const NC = 16, cells = [];
+const hash = s => { const v = Math.sin(s*127.1)*43758.5453; return v - Math.floor(v); };
+for(let i=0;i<NC;i++) cells.push({x: (i+0.5)*DOMX/NC + 180*hash(i), seed: i*1.7+0.3});
+function stepClouds(dt, st){
+  if(st.cf <= 0) return;
+  const u = windM(st.zb, st);
+  for(const c of cells){ c.x += u*dt*0.35; if(c.x > DOMX*1.12) c.x -= DOMX*1.24; }
+}
+
+/* ---------- régimen de dispersión ---------- */
+function regime(st){
+  const hs = hStack;
+  if(st.wDay > 0.5){
+    if(st.x < 0.55 && hs < st.zi && hs > st.zi*0.62)
+      return ['Fumigación', 'La capa mezclada acaba de alcanzar el penacho: el humo almacenado en altura baja al suelo (Fig. 1.14).'];
+    if(hs < st.zi*0.95) return ['Looping (bucles)', 'Los remolinos convectivos son del tamaño de zᵢ: el penacho sube y baja en bucles y toca el suelo cerca de la fuente (Fig. 1.8).'];
+    if(hs < st.zi+st.ez) return ['Atrapado en la inversión', 'La emisión queda en la zona de entrainment: dispersión débil, el humo flota sobre la capa mezclada.'];
+    return ['Sobre la CLP', 'La chimenea emite en aire casi no turbulento por encima de la capa límite: el penacho apenas se ensancha.'];
+  }
+  if(hs < st.h*0.85) return ['Fanning (abanico)', 'Emisión dentro de la capa estable: dispersión vertical casi nula, el penacho se abre sólo en horizontal (Fig. 1.10).'];
+  if(hs < st.h*1.35) return ['Lofting', 'El penacho está justo sobre h: se dispersa hacia arriba en aire neutro, pero la estabilidad le impide bajar al suelo (Fig. 1.13).'];
+  if(hs < st.zr) return ['Coning (cono)', 'Emisión en la capa residual, de estratificación neutra: el humo se abre a tasas parecidas en vertical y horizontal.'];
+  return ['Atmósfera libre', 'Por encima de la capa residual la turbulencia es despreciable y el penacho viaja casi sin mezclarse.'];
+}
+
+/* ---------- utilidades de canvas ---------- */
+function fit(cv){
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, Math.round(r.width*d)); cv.height = Math.max(1, Math.round(r.height*d));
+  const g = cv.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  return {g, w:r.width, h:r.height};
+}
+const MONO = p => p+'px "IBM Plex Mono", ui-monospace, monospace';
+const SANS = p => p+'px "Source Sans 3", system-ui, sans-serif';
+function hexA(h, a){
+  h = h.replace('#',''); if(h.length===3) h = h.split('').map(c=>c+c).join('');
+  return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';
+}
+const hhmm = tt => String(Math.floor(tt)%24).padStart(2,'0')+':'+String(Math.floor((tt%1)*60)).padStart(2,'0');
+
+/* ---------- escena ---------- */
+const scene = document.getElementById('scene');
+let sunPos = {x:0,y:0};
+function drawScene(){
+  const {g,w,h} = fit(scene);
+  const st = state(t);
+  const gy = h - 26, Y = z => gy - (z/ZTOP)*(gy-10), X = x => (x/DOMX)*w;
+  const night = 1 - st.wDay;
+  const dawn = Math.max(0, 1-Math.abs(t-TSR)/1.8, 1-Math.abs(t-TSS)/1.8);
+
+  // cielo (interpolación continua día ↔ noche ↔ crepúsculo)
+  const blend = (a,b,f)=>a.map((v,i)=>Math.round(v+(b[i]-v)*f));
+  let top = blend([86,142,196],[9,16,36], night), bot = blend([186,214,236],[22,30,52], night);
+  top = blend(top,[214,128,66], dawn*0.55); bot = blend(bot,[238,176,104], dawn*0.7);
+  const sky = g.createLinearGradient(0,0,0,gy);
+  sky.addColorStop(0,'rgb('+top.join(',')+')'); sky.addColorStop(1,'rgb('+bot.join(',')+')');
+  g.fillStyle = sky; g.fillRect(0,0,w,gy);
+
+  // arco horario y sol / luna
+  const cx = w/2, cy = gy, R = Math.min(w*0.44, (gy-16)*0.92);
+  g.strokeStyle = hexA(night>0.5?'#ffffff':'#1b2a3a', 0.22); g.setLineDash([3,5]); g.lineWidth = 1;
+  g.beginPath(); g.arc(cx,cy,R,Math.PI,0); g.stroke(); g.setLineDash([]);
+  [[TSR,'salida'],[12,'12'],[TSS,'puesta']].forEach(function(p){
+    const a = Math.PI*(1-p[0]/24), px = cx+R*Math.cos(a), py = cy-R*Math.sin(a);
+    g.fillStyle = hexA(night>0.5?'#ffffff':'#1b2a3a',0.5);
+    g.beginPath(); g.arc(px,py,2,0,7); g.fill();
+    g.font = MONO(9); g.textAlign='center'; g.fillText(p[1], px, py-8);
+  });
+  const ang = Math.PI*(1-t/24);
+  sunPos.x = cx + R*Math.cos(ang); sunPos.y = cy - R*Math.sin(ang);
+  const solar = clamp(1-night*1.15, 0, 1);
+  if(solar > 0.02){
+    const gl = g.createRadialGradient(sunPos.x,sunPos.y,2,sunPos.x,sunPos.y,32);
+    gl.addColorStop(0, hexA(css('--sun'), 0.85*solar)); gl.addColorStop(1, hexA(css('--sun'),0));
+    g.fillStyle = gl; g.beginPath(); g.arc(sunPos.x,sunPos.y,32,0,7); g.fill();
+  }
+  g.globalAlpha = clamp(1-night*1.6, 0, 1);
+  g.fillStyle = '#ffd37a'; g.beginPath(); g.arc(sunPos.x,sunPos.y,11,0,7); g.fill();
+  g.strokeStyle = css('--sun'); g.lineWidth = 2; g.stroke();
+  g.globalAlpha = clamp(night*1.6-0.6, 0, 1);
+  g.fillStyle = '#dfe7f0'; g.beginPath(); g.arc(sunPos.x,sunPos.y,10,0,7); g.fill();
+  g.fillStyle = 'rgba(12,18,26,.95)'; g.beginPath(); g.arc(sunPos.x+4.5,sunPos.y-3.5,9.5,0,7); g.fill();
+  g.globalAlpha = 1;
+
+  // bandas de capa: las diurnas y las nocturnas se funden con wDay
+  const band=(z0,z1,c,a)=>{ if(z1<=z0 || a<=0.004) return; g.fillStyle=hexA(c,a); g.fillRect(0,Y(z1),w,Y(z0)-Y(z1)); };
+  const d = st.wDay, n = night;
+  band(st.zi+st.ez, ZTOP, css('--fa'), 0.14*d);
+  if(st.zr > st.zi+st.ez) band(st.zi+st.ez, st.zr, css('--rl'), 0.16*d);
+  band(st.zi, st.zi+st.ez, css('--ez'), 0.30*d);
+  band(0, st.zi, css('--ml'), 0.17*d);
+  if(st.remn > st.zi) band(st.zi, st.remn, css('--sbl'), 0.13*d);
+  band(st.zr+150, ZTOP, css('--fa'), 0.14*n);
+  band(st.zr, st.zr+150, css('--ez'), 0.26*n);
+  band(st.h, st.zr, css('--rl'), 0.18*n);
+  band(0, st.h, css('--sbl'), 0.22*n);
+
+  const slTop = 0.1*Math.max(st.cap, 60);
+  g.strokeStyle = hexA(css('--ink'),0.28); g.setLineDash([2,4]); g.lineWidth=1;
+  g.beginPath(); g.moveTo(0,Y(slTop)); g.lineTo(w,Y(slTop)); g.stroke();
+
+  // nivel de condensación
+  if(st.wDay > 0.05 && st.zb < ZTOP){
+    g.strokeStyle = hexA(css('--cloud'), 0.55*st.wDay); g.setLineDash([6,5]);
+    g.beginPath(); g.moveTo(0,Y(st.zb)); g.lineTo(w,Y(st.zb)); g.stroke();
+    g.fillStyle = hexA(night>0.5?'#ffffff':'#17222c', 0.55*st.wDay); g.font = MONO(9); g.textAlign='right';
+    g.fillText('NCA  z_b = '+Math.round(st.zb)+' m', w-54, Y(st.zb)-5);
+  }
+  g.setLineDash([]);
+
+  // cúmulus: base plana en z_b, topes repartidos hasta z_i
+  if(st.cf > 0.02){
+    const top0 = st.zi + 0.25*st.ez, depth = Math.max(60, top0 - st.zb);
+    for(const c of cells){
+      const s = c.seed;
+      if(hash(s*3.1) > st.cf) continue;
+      const topZ = st.zb + depth*(0.45 + 0.55*hash(s*5.7));
+      const yTop = Y(topZ), yBase = Y(st.zb), hpx = yBase - yTop;
+      if(hpx < 4) continue;
+      const wid = hpx*(1.3 + 0.9*hash(s*9.3));
+      g.save();
+      g.beginPath(); g.rect(0, yTop-2, w, hpx+2); g.clip();
+      g.fillStyle = hexA(css('--cloud'), 0.86*clamp(st.cf*1.3,0,1));
+      const npuff = 4;
+      for(let k=0;k<npuff;k++){
+        const fx = (k+0.5)/npuff, rr = hpx*(0.42 + 0.3*hash(s*13+k));
+        const px = X(c.x) + (fx-0.5)*wid, py = yBase - hpx*(0.3 + 0.42*hash(s*17+k));
+        g.beginPath(); g.arc(px, py, rr, 0, 7); g.fill();
+      }
+      g.fillStyle = hexA('#8aa0b4', 0.30*clamp(st.cf*1.3,0,1));
+      g.fillRect(X(c.x)-wid*0.55, yBase-hpx*0.12, wid*1.1, hpx*0.12);
+      g.restore();
+    }
+  }
+
+  // etiquetas de capa
+  g.textAlign='left'; g.font = SANS(11.5);
+  const lab = (z0,z1,txt,alpha)=>{ if(alpha < 0.12) return; const yy=(Y(z0)+Y(z1))/2;
+    if(Y(z0)-Y(z1) < 15) return; g.fillStyle = hexA(css('--ink'), 0.78*alpha); g.fillText(txt, 10, yy+4); };
+  lab(st.zi+st.ez, ZTOP, st.zr > st.zi+st.ez+60 ? 'Capa residual' : 'Atmósfera libre', d);
+  lab(st.zi, st.zi+st.ez, 'Zona de entrainment', d);
+  if(st.cf > 0.25 && st.zb < st.zi){ lab(st.zb, st.zi, 'Capa de nubes', d); lab(0, st.zb, 'Capa subnube', d); }
+  else lab(0, st.zi, 'Capa mezclada', d);
+  lab(st.zr, ZTOP, 'Atmósfera libre', n);
+  lab(st.h, st.zr, 'Capa residual', n);
+  lab(0, st.h, 'Capa límite estable', n);
+  g.fillStyle = hexA(css('--ink'),0.5); g.font = MONO(9);
+  g.fillText('capa superficial (0,1 z)', 10, Y(slTop)-4);
+
+  // eje de alturas
+  g.textAlign='right'; g.font = MONO(9.5);
+  for(let z=0; z<=2000; z+=500){
+    g.fillStyle = hexA(css('--ink'),0.45); g.fillText(z+' m', w-8, Y(z)-3);
+    g.strokeStyle = hexA(css('--ink'),0.12);
+    g.beginPath(); g.moveTo(w-46,Y(z)); g.lineTo(w-4,Y(z)); g.stroke();
+  }
+
+  // humo
+  g.fillStyle = hexA(night>0.5 ? '#e8eef4' : '#2b3742', 0.55);
+  for(const p of parts){
+    g.globalAlpha = clamp(1 - p.age/2200, 0.12, 0.75);
+    g.beginPath(); g.arc(X(p.x), Y(p.z), 1.9, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+
+  // suelo y chimenea
+  g.fillStyle = night>0.5 ? '#141c24' : '#3c4a44'; g.fillRect(0,gy,w,h-gy);
+  const sx = X(0.16*DOMX), sy = Y(hStack);
+  g.fillStyle = night>0.5 ? '#46525c' : '#6b6560';
+  g.beginPath(); g.moveTo(sx-5,gy); g.lineTo(sx-3,sy); g.lineTo(sx+3,sy); g.lineTo(sx+5,gy); g.closePath(); g.fill();
+  g.fillStyle = hexA(css('--ink'),0.55); g.font = MONO(9.5); g.textAlign='left';
+  g.fillText(Math.round(hStack)+' m', sx+8, sy+4);
+
+  g.fillStyle = hexA(night>0.5?'#ffffff':'#101820', 0.75); g.font = MONO(13);
+  g.fillText(hhmm(t), 12, 20);
+}
+
+/* ---------- Fig. 1.7 ---------- */
+function drawFig17(){
+  const cv = document.getElementById('fig17');
+  const {g,w,h} = fit(cv);
+  const L=42, R=12, T=12, B=26, N=288;
+  const X = tt => L + (tt/24)*(w-L-R), Y = z => (h-B) - (z/ZTOP)*(h-B-T);
+  g.clearRect(0,0,w,h);
+  g.fillStyle = hexA(css('--fa'),0.14); g.fillRect(L,T,w-L-R,h-B-T);
+  const sts = []; for(let i=0;i<=N;i++) sts.push(state(i*24/N));
+  const colW = (w-L-R)/N + 0.8;
+  const col = (i, z0, z1, c, a) => { if(z1<=z0 || a<=0.004) return;
+    g.fillStyle = hexA(c,a); g.fillRect(X(i*24/N)-colW/2, Y(z1), colW, Y(z0)-Y(z1)); };
+  for(let i=0;i<=N;i++){
+    const s = sts[i], d = s.wDay, n = 1-d;
+    col(i, s.zi+s.ez, Math.max(s.zr, s.zi+s.ez), css('--rl'), 0.20*d);
+    col(i, s.zi, s.zi+s.ez, css('--ez'), 0.28*d);
+    col(i, 0, s.zi, css('--ml'), 0.26*d);
+    col(i, s.zr, s.zr+150, css('--ez'), 0.24*n);
+    col(i, s.h, s.zr, css('--rl'), 0.20*n);
+    col(i, 0, s.h, css('--sbl'), 0.28*n);
+    if(s.cf > 0.02) col(i, s.zb, s.zi, css('--cloud'), 0.5*s.cf);
+  }
+  const curve = (get, color, alphaOf) => {
+    g.lineWidth = 1.8;
+    for(let i=1;i<=N;i++){
+      const a = alphaOf(sts[i]); if(a < 0.05) continue;
+      g.strokeStyle = hexA(color, a); g.beginPath();
+      g.moveTo(X((i-1)*24/N), Y(get(sts[i-1]))); g.lineTo(X(i*24/N), Y(get(sts[i]))); g.stroke();
+    }
+  };
+  curve(s=>s.zi, css('--ml'), s=>s.wDay);
+  curve(s=>s.h,  css('--sbl'), s=>1-s.wDay);
+  curve(s=>s.zb, css('--cloud'), s=>0.8*s.cf);
+
+  g.strokeStyle = css('--line'); g.lineWidth=1;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,h-B); g.lineTo(w-R,h-B); g.stroke();
+  g.fillStyle = css('--muted'); g.font = MONO(9.5); g.textAlign='right';
+  for(let z=0; z<=2000; z+=500){
+    g.fillText(z, L-6, Y(z)+3);
+    g.strokeStyle = hexA(css('--ink'),0.07);
+    g.beginPath(); g.moveTo(L,Y(z)); g.lineTo(w-R,Y(z)); g.stroke();
+  }
+  g.textAlign='center';
+  for(let hh=0; hh<=24; hh+=3) g.fillText(String(hh).padStart(2,'0'), X(hh), h-B+14);
+  g.save(); g.translate(12,(h-B+T)/2); g.rotate(-Math.PI/2); g.textAlign='center';
+  g.fillText('z  (m)', 0, 0); g.restore();
+
+  g.fillStyle = hexA(css('--ink'),0.05);
+  g.fillRect(L,T,X(TSR)-L,h-B-T); g.fillRect(X(TSS),T,w-R-X(TSS),h-B-T);
+  g.strokeStyle = css('--sun'); g.lineWidth=1.8; g.setLineDash([4,3]);
+  g.beginPath(); g.moveTo(X(t),T); g.lineTo(X(t),h-B); g.stroke(); g.setLineDash([]);
+  g.fillStyle = css('--sun'); g.beginPath(); g.arc(X(t), T+5, 4, 0, 7); g.fill();
+
+  g.font = SANS(11); g.textAlign='center'; g.fillStyle = hexA(css('--ink'),0.72);
+  g.fillText('Capa mezclada', X(13.6), Y(650));
+  g.fillText('Capa residual', X(21.4), Y(1100));
+  g.fillText('CL estable', X(3.2), Y(150)-6);
+  g.font = MONO(9.5); g.fillStyle = css('--muted'); g.textAlign='left';
+  g.fillText('hora local', L+4, h-B+26);
+}
+
+/* ---------- perfiles ---------- */
+function axes(g,w,h,L,R,T,B,st,Y,minL,maxL,label){
+  g.strokeStyle = css('--line'); g.lineWidth=1;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,h-B); g.lineTo(w-R,h-B); g.stroke();
+  g.fillStyle = css('--muted'); g.font = MONO(8.5); g.textAlign='right';
+  for(let z=0; z<=2000; z+=1000) g.fillText(z, L-4, Y(z)+3);
+  g.textAlign='center'; g.fillText(minL, L, h-B+12); g.fillText(maxL, w-R, h-B+12);
+  g.fillStyle = css('--ink'); g.font = SANS(11); g.textAlign='left';
+  g.fillText(label, L-24, 12);
+  if(st.cf > 0.05 && st.zb < ZTOP){
+    g.strokeStyle = hexA(css('--ink'), 0.35); g.setLineDash([4,3]); g.lineWidth=1;
+    g.beginPath(); g.moveTo(L, Y(st.zb)); g.lineTo(w-R, Y(st.zb)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = hexA(css('--ink'),0.5); g.font = MONO(8); g.textAlign='left';
+    g.fillText('z_b', L+3, Y(st.zb)-3);
+  }
+}
+function bgBands(g,w,L,R,st,Y){
+  const band=(z0,z1,c,a)=>{ if(z1<=z0||a<=0.004) return; g.fillStyle=hexA(c,a); g.fillRect(L,Y(z1),w-L-R,Y(z0)-Y(z1)); };
+  const d = st.wDay, n = 1-d;
+  band(0,st.zi,css('--ml'),0.10*d); band(st.zi,st.zi+st.ez,css('--ez'),0.16*d);
+  band(st.zi+st.ez,st.zr,css('--rl'),0.08*d);
+  if(st.cf>0.05) band(st.zb, st.zi, css('--cloud'), 0.22*st.cf);
+  band(0,st.h,css('--sbl'),0.14*n); band(st.h,st.zr,css('--rl'),0.10*n);
+  band(st.zr,st.zr+150,css('--ez'),0.16*n);
+}
+function drawProfile(id, fn, o){
+  const {g,w,h} = fit(document.getElementById(id));
+  const L=30,R=8,T=22,B=24, st = state(t);
+  const X = v => L + ((v-o.min)/(o.max-o.min))*(w-L-R), Y = z => (h-B) - (z/ZTOP)*(h-B-T);
+  g.clearRect(0,0,w,h);
+  bgBands(g,w,L,R,st,Y);
+  axes(g,w,h,L,R,T,B,st,Y,o.min,o.max,o.label);
+  g.strokeStyle = o.color; g.lineWidth = 2; g.beginPath();
+  let first = true;
+  for(let z=0; z<=ZTOP; z+=10){
+    const px = X(clamp(fn(z, st), o.min, o.max)), py = Y(z);
+    first ? (g.moveTo(px,py), first=false) : g.lineTo(px,py);
+  }
+  g.stroke();
+}
+function drawConc(){
+  const {g,w,h} = fit(document.getElementById('p-c'));
+  const L=30,R=8,T=22,B=24, st = state(t);
+  const Y = z => (h-B) - (z/ZTOP)*(h-B-T), X = v => L + v*(w-L-R);
+  g.clearRect(0,0,w,h);
+  bgBands(g,w,L,R,st,Y);
+  g.fillStyle = hexA(css('--sun'),0.35); g.strokeStyle = css('--sun'); g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(L, Y(0));
+  for(let i=0;i<NBIN;i++){
+    const sm = (bins[Math.max(0,i-1)] + 2*bins[i] + bins[Math.min(NBIN-1,i+1)])/4;
+    g.lineTo(X(sm), Y((i+0.5)*BINH));
+  }
+  g.lineTo(L, Y(ZTOP)); g.closePath(); g.fill(); g.stroke();
+  axes(g,w,h,L,R,T,B,st,Y,'0','máx','c  (penacho)');
+}
+
+/* ---------- interfaz ---------- */
+const tsl = document.getElementById('tslider'), hsl = document.getElementById('hslider'), rsl = document.getElementById('rslider');
+function syncUI(){
+  const st = state(t);
+  document.getElementById('tval').textContent = hhmm(t);
+  document.getElementById('hval').textContent = Math.round(hStack)+' m';
+  document.getElementById('rval').textContent = R0.toFixed(1).replace('.',',')+' g/kg';
+  document.getElementById('s-zi').textContent = st.wDay > 0.15 ? Math.round(st.zi)+' m' : '—';
+  document.getElementById('s-h').textContent  = st.wDay < 0.85 ? Math.round(st.h)+' m' : '—';
+  document.getElementById('s-zb').textContent = st.cf > 0.02 ? Math.round(st.zb)+' m' : (st.wDay>0.15 ? Math.round(st.zb)+' m (sin nubes)' : '—');
+  document.getElementById('s-zr').textContent = Math.round(st.zr)+' m';
+  document.getElementById('s-ws').textContent = st.wstar > 0.02 ? st.wstar.toFixed(2)+' m s⁻¹' : '0';
+  const r = regime(st);
+  document.getElementById('regname').textContent = r[0];
+  document.getElementById('regtext').textContent = r[1];
+}
+function redrawStatic(){ drawFig17(); drawProfiles(); syncUI(); }
+function drawProfiles(){
+  drawProfile('p-th', thetaV, {min:288, max:312, label:'θᵥ  (K)', color:css('--ml')});
+  drawProfile('p-m',  windM,  {min:0,   max:16,  label:'M  (m s⁻¹)', color:css('--sbl')});
+  drawProfile('p-r',  mixr,   {min:2,   max:15,  label:'r  (g kg⁻¹)', color:css('--rl')});
+  drawConc();
+}
+function setTime(nt){ t = clamp(nt, 0, 24); tsl.value = t; redrawStatic(); }
+tsl.addEventListener('input', e => setTime(parseFloat(e.target.value)));
+hsl.addEventListener('input', e => { hStack = parseFloat(e.target.value); syncUI(); });
+rsl.addEventListener('input', e => { R0 = parseFloat(e.target.value); redrawStatic(); });
+document.getElementById('clear').addEventListener('click', ()=>{ parts.length = 0; });
+const playBtn = document.getElementById('play');
+playBtn.addEventListener('click', ()=>{ playing = !playing; playBtn.textContent = playing ? 'Pausar' : 'Reproducir el día'; });
+
+let dragging = false;
+function timeFromPoint(ev){
+  const r = scene.getBoundingClientRect();
+  const cx = r.width/2, cy = r.height - 26;
+  let a = Math.atan2(cy - (ev.clientY - r.top), (ev.clientX - r.left) - cx);
+  return 24*(1 - clamp(a, 0, Math.PI)/Math.PI);
+}
+scene.addEventListener('pointerdown', ev => {
+  const r = scene.getBoundingClientRect();
+  const dx = ev.clientX - r.left - sunPos.x, dy = ev.clientY - r.top - sunPos.y;
+  dragging = Math.hypot(dx,dy) < 46 || (ev.clientY - r.top) < r.height*0.55;
+  if(dragging){ scene.setPointerCapture(ev.pointerId); scene.classList.add('grabbing'); setTime(timeFromPoint(ev)); }
+});
+scene.addEventListener('pointermove', ev => { if(dragging) setTime(timeFromPoint(ev)); });
+scene.addEventListener('pointerup', ()=>{ dragging=false; scene.classList.remove('grabbing'); });
+scene.addEventListener('pointercancel', ()=>{ dragging=false; scene.classList.remove('grabbing'); });
+document.getElementById('fig17').addEventListener('pointerdown', ev => {
+  const r = ev.currentTarget.getBoundingClientRect(), L=42, R=12;
+  setTime(((ev.clientX - r.left - L)/(r.width-L-R))*24);
+});
+
+/* ---------- bucle ---------- */
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ts){
+  const dtReal = Math.min(0.1, (ts - lastFrame)/1000 || 0.016); lastFrame = ts;
+  const st = state(t);
+  if(!reduce){ stepParticles(2.2, st); stepClouds(2.2, st); }
+  if(playing){ t += dtReal*0.55; if(t > 24) t -= 24; tsl.value = t; redrawStatic(); }
+  drawScene();
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(redrawStatic).observe(document.querySelector('.wrap'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawStatic);
+
+for(let i=0;i<260;i++) stepParticles(2.2, state(t));
+redrawStatic();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
