@@ -15,3 +15,6 @@ index_not.html
 # Large source files not meant to be published on the live site
 Poster_Rayos.pptx
 images/*.zip
+
+# Full-resolution carousel originals (kept locally, not deployed)
+images/carousel/originals/
